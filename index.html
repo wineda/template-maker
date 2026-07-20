@@ -366,7 +366,8 @@
   const isDesc = (node, id) => node.children.some(c => c.id === id || isDesc(c, id));
 
   // ---------- inline edit (re-entrancy safe) ----------
-  const startEdit = (node2, node, after) => {
+  const startEdit = (node2, node, after, field) => {
+    field = field || "title";                 // nodes use .title; templates use .name
     node2.contentEditable = "true"; node2.focus();
     const r = document.createRange(); r.selectNodeContents(node2);
     const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
@@ -374,13 +375,13 @@
     const finish = (cancel) => {
       if (committed) return; committed = true;
       node2.contentEditable = "false";
-      if (!cancel) { const v = node2.textContent.trim(); if (v) node.title = v; }
+      if (!cancel) { const v = node2.textContent.trim(); if (v) node[field] = v; }
       render(); if (after) after();
     };
     node2.addEventListener("blur", () => finish(false), { once:true });
     node2.addEventListener("keydown", (e) => {
       if (e.key === "Enter") { e.preventDefault(); node2.blur(); }
-      else if (e.key === "Escape") { e.preventDefault(); node2.textContent = node.title; node2.blur(); }
+      else if (e.key === "Escape") { e.preventDefault(); node2.textContent = node[field]; node2.blur(); }
     });
   };
 
@@ -677,7 +678,7 @@
     nb.onclick = () => {
       const t = { id:nid(), emoji:"🗂️", name:"新しいテンプレート", desc:"", tree:[] };
       templates.push(t); currentTplId = t.id; tplView = "edit"; render();
-      requestAnimationFrame(() => { const e2 = el("abTitle"); if (e2) startEdit(e2, t); });
+      requestAnimationFrame(() => { const e2 = el("abTitle"); if (e2) startEdit(e2, t, null, "name"); });
     };
     s.appendChild(nb);
   };
@@ -688,11 +689,8 @@
     if (!tpl) { tplView = "list"; return renderTplList(); }
     const del = document.createElement("button"); del.className = "iconbtn-lg danger"; del.innerHTML = DEL; del.title = "テンプレートを削除";
     del.onclick = () => { if (!confirm(`テンプレート「${tpl.name}」を削除しますか？`)) return; templates = templates.filter(t => t.id !== tpl.id); tplView = "list"; render(); };
-    const applyBtn = document.createElement("button"); applyBtn.className = "abbtn"; applyBtn.innerHTML = `${ADD}<span>本日に追加</span>`;
-    applyBtn.onclick = () => { today.push(instantiate(tpl)); mode = "today"; render(); };
-    const rightWrap = document.createElement("div"); rightWrap.className = "ab-actions"; rightWrap.append(applyBtn, del);
-    setAppbar({ back: () => { tplView = "list"; render(); }, emoji: tpl.emoji, title: tpl.name, right: rightWrap });
-    el("abTitle").ondblclick = (e) => startEdit(e.target, tpl);
+    setAppbar({ back: () => { tplView = "list"; render(); }, emoji: tpl.emoji, title: tpl.name, right: del });
+    el("abTitle").ondblclick = (e) => startEdit(e.target, tpl, null, "name");
     el("abEmoji").onclick = () => { const v = prompt("絵文字を入力", tpl.emoji); if (v && v.trim()) { tpl.emoji = v.trim(); render(); } };
 
     el("subbar").style.display = "none";
