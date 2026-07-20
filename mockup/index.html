@@ -330,7 +330,12 @@
   // to change its depth (outdent / indent). The tree previews the result live.
   const INDENT = 26;                 // px per depth level (matches .children padding-left)
   const LONGPRESS_MS = 320;
-  let dragging = false, suppressTap = false;
+  let dragging = false, suppressTap = false, activeDragEnd = null;
+  // Global safety net: ANY genuine release ends an active drag, so the screen can never
+  // stay locked ("frozen"). Capture phase, and pointercancel is deliberately excluded
+  // (it also fires spuriously when a re-render detaches the row under the finger).
+  ["pointerup", "touchend", "touchcancel"].forEach((t) =>
+    document.addEventListener(t, () => { if (activeDragEnd) activeDragEnd(); }, true));
 
   // arm a long-press on pointerdown; a quick tap falls through to the tap handlers
   const armLongPress = (e, node, treeRoot) => {
@@ -338,8 +343,9 @@
     if (e.target.closest(".check") || e.target.isContentEditable) return;   // let checkbox / editing work
     if (e.button != null && e.button !== 0) return;
     const srcRow = e.currentTarget;
-    const sx = e.clientX, sy = e.clientY, isTouch = e.pointerType === "touch";
-    let timer = setTimeout(() => { timer = null; cleanup(); beginDrag(node, treeRoot, srcRow, sx, sy, isTouch); }, LONGPRESS_MS);
+    const touchTarget = e.target;   // the exact element the touch started on — keeps receiving touch events even after re-render detaches it
+    const sx = e.clientX, sy = e.clientY;
+    let timer = setTimeout(() => { timer = null; cleanup(); beginDrag(node, treeRoot, srcRow, sx, sy, touchTarget); }, LONGPRESS_MS);
     const onMove = (ev) => { if (Math.abs(ev.clientX - sx) > 8 || Math.abs(ev.clientY - sy) > 8) { clear(); } };
     const onEnd = () => clear();
     const clear = () => { if (timer) { clearTimeout(timer); timer = null; } cleanup(); };
@@ -349,7 +355,7 @@
     window.addEventListener("pointercancel", onEnd);
   };
 
-  const beginDrag = (node, treeRoot, srcRow, sx, sy, isTouch) => {
+  const beginDrag = (node, treeRoot, srcRow, sx, sy, touchTarget) => {
     if (dragging) return;
     dragging = true;
     const dragId = node.id;
@@ -423,19 +429,23 @@
       const st = el("screen").scrollTop; render(); el("screen").scrollTop = st;
       decorate();
     };
-    // Touch drags are driven by TOUCH events, not pointer events: touch events keep
-    // firing to the original target even after each re-render removes the row under
-    // the finger (pointer events would fire pointercancel and abort on Android/Brave).
+    // Each move re-renders the tree, DETACHING the element the finger is on. Touch events keep
+    // dispatching to that original element even after it's detached — so touch listeners MUST be on
+    // `touchTarget` (not window), or they'd stop firing and the drag would freeze/never end.
+    // Mouse/pen has no such issue and is driven by window pointer events.
     const onTouchMove = (ev) => { if (ev.cancelable) ev.preventDefault(); const t = ev.touches[0] || ev.changedTouches[0]; if (t) move(t); };
-    const onPtrMove = (ev) => move(ev);
+    const onPtrMove = (ev) => move(ev);   // real touch also covered by onTouchMove; sig-check dedupes
     const onEndUp = () => finish(false);
     const onKey = (ev) => { if (ev.key === "Escape") finish(true); };
     const finish = (cancel) => {
-      window.removeEventListener("touchmove", onTouchMove);
-      window.removeEventListener("touchend", onEndUp);
-      window.removeEventListener("touchcancel", onEndUp);
+      if (!dragging) return;              // idempotent: multiple end events may fire
+      activeDragEnd = null;
+      touchTarget.removeEventListener("touchmove", onTouchMove);
+      touchTarget.removeEventListener("touchend", onEndUp);
+      touchTarget.removeEventListener("touchcancel", onEndUp);
       window.removeEventListener("pointermove", onPtrMove);
       window.removeEventListener("pointerup", onEndUp);
+      window.removeEventListener("blur", onEndUp);
       window.removeEventListener("keydown", onKey);
       ghost.remove();
       document.body.classList.remove("dragging");
@@ -445,14 +455,14 @@
       dragging = false; suppressTap = true; setTimeout(() => { suppressTap = false; }, 60);
       const st = el("screen").scrollTop; render(); el("screen").scrollTop = st;
     };
-    if (isTouch) {
-      window.addEventListener("touchmove", onTouchMove, { passive: false });
-      window.addEventListener("touchend", onEndUp);
-      window.addEventListener("touchcancel", onEndUp);
-    } else {
-      window.addEventListener("pointermove", onPtrMove);
-      window.addEventListener("pointerup", onEndUp);
-    }
+    // touch: on the original target (survives detachment) · mouse/pen: on window · pointercancel: ignored
+    activeDragEnd = () => finish(false);
+    touchTarget.addEventListener("touchmove", onTouchMove, { passive: false });
+    touchTarget.addEventListener("touchend", onEndUp);
+    touchTarget.addEventListener("touchcancel", onEndUp);
+    window.addEventListener("pointermove", onPtrMove);
+    window.addEventListener("pointerup", onEndUp);
+    window.addEventListener("blur", onEndUp);
     window.addEventListener("keydown", onKey);
   };
 
