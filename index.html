@@ -1,0 +1,851 @@
+<title>ひな形タスク — テンプレートでつくる毎日のタスク</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#4a5bd6" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#0d0f16" media="(prefers-color-scheme: dark)" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="ひな形タスク" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<style>
+  :root {
+    --bg:#f4f5fa; --surface:#ffffff; --surface-2:#eef0f7; --surface-hover:#f2f3fa;
+    --border:#e5e7f0; --border-strong:#d3d7e6; --text:#191c2b; --text-dim:#5f6580; --text-faint:#969cb4;
+    --accent:#4a5bd6; --accent-soft:#eceeff; --done:#1f9d55; --done-soft:#e4f5ea; --danger:#e0556b;
+    --shadow:0 1px 2px rgba(20,24,48,.05), 0 10px 24px -14px rgba(20,24,48,.14);
+    --d1:#4a5bd6; --d2:#1f9d8a; --d3:#d98324; --d4:#c0568a; --d5:#7a56c0;
+    --radius:14px; --radius-sm:10px;
+    --safe-b: env(safe-area-inset-bottom, 0px);
+    font-synthesis:none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#0d0f16; --surface:#161a24; --surface-2:#1e2331; --surface-hover:#222738;
+      --border:#282e3e; --border-strong:#353c50; --text:#e9ebf5; --text-dim:#9aa1ba;
+      --text-faint:#6b7288; --accent:#7f8bff; --accent-soft:#232a4c; --done:#46c37b; --done-soft:#163524; --danger:#f06a7e;
+      --shadow:0 1px 2px rgba(0,0,0,.35), 0 14px 30px -16px rgba(0,0,0,.6);
+      --d1:#7f8bff; --d2:#34c3ac; --d3:#e5a04e; --d4:#db7aad; --d5:#a284e0;
+    }
+  }
+  :root[data-theme="light"]{ --bg:#f4f5fa;--surface:#fff;--surface-2:#eef0f7;--surface-hover:#f2f3fa;--border:#e5e7f0;--border-strong:#d3d7e6;--text:#191c2b;--text-dim:#5f6580;--text-faint:#969cb4;--accent:#4a5bd6;--accent-soft:#eceeff;--done:#1f9d55;--done-soft:#e4f5ea;--danger:#e0556b;--shadow:0 1px 2px rgba(20,24,48,.05),0 10px 24px -14px rgba(20,24,48,.14);--d1:#4a5bd6;--d2:#1f9d8a;--d3:#d98324;--d4:#c0568a;--d5:#7a56c0;}
+  :root[data-theme="dark"]{ --bg:#0d0f16;--surface:#161a24;--surface-2:#1e2331;--surface-hover:#222738;--border:#282e3e;--border-strong:#353c50;--text:#e9ebf5;--text-dim:#9aa1ba;--text-faint:#6b7288;--accent:#7f8bff;--accent-soft:#232a4c;--done:#46c37b;--done-soft:#163524;--danger:#f06a7e;--shadow:0 1px 2px rgba(0,0,0,.35),0 14px 30px -16px rgba(0,0,0,.6);--d1:#7f8bff;--d2:#34c3ac;--d3:#e5a04e;--d4:#db7aad;--d5:#a284e0;}
+
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; }
+  body {
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic UI","Segoe UI", Meiryo, sans-serif;
+    font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  body.dragging { user-select:none; -webkit-user-select:none; }
+  button { font-family:inherit; cursor:pointer; color:inherit; }
+  input { font-family:inherit; }
+  ::selection { background:var(--accent-soft); }
+
+  .app { display:flex; flex-direction:column; height:100dvh; max-width:520px; margin:0 auto; background:var(--bg); position:relative; box-shadow:0 0 0 1px var(--border); }
+
+  /* appbar */
+  .appbar { flex:none; display:flex; align-items:center; gap:6px; padding:12px 12px; min-height:56px; background:var(--surface); border-bottom:1px solid var(--border); }
+  .appbar .slot { flex:none; display:flex; }
+  .appbar .titlewrap { flex:1; min-width:0; }
+  .appbar .eyebrow { font-size:10.5px; font-weight:700; letter-spacing:.09em; color:var(--accent); text-transform:uppercase; }
+  .appbar h1 { margin:1px 0 0; font-size:18px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:8px; }
+  .appbar h1 .em { font-size:19px; flex:none; }
+  .appbar h1 [contenteditable="true"]{ outline:none; border-bottom:2px solid var(--accent); }
+  .iconbtn-lg { width:40px; height:40px; border:none; background:none; border-radius:11px; display:grid; place-items:center; color:var(--text-dim); flex:none; }
+  .iconbtn-lg:active { background:var(--surface-2); }
+  .iconbtn-lg svg { width:22px; height:22px; }
+  .iconbtn-lg.danger:active { color:var(--danger); background:#e0556b1a; }
+  .ab-actions { display:flex; align-items:center; gap:2px; flex:none; }
+  .abbtn { display:inline-flex; align-items:center; gap:5px; background:var(--accent); color:#fff; border:none; border-radius:10px; padding:8px 11px; font-size:12.5px; font-weight:700; white-space:nowrap; }
+  .abbtn:active { filter:brightness(.93); }
+  .abbtn svg { width:15px; height:15px; }
+
+  .ring { display:flex; align-items:center; gap:9px; flex:none; }
+  .ring .pct b { font-size:15px; font-variant-numeric:tabular-nums; }
+  .ring svg { transform:rotate(-90deg); display:block; }
+  .ring .track { stroke:var(--surface-2); }
+  .ring .fill { stroke:var(--accent); stroke-linecap:round; transition:stroke-dashoffset .5s cubic-bezier(.4,0,.2,1); }
+
+  /* subbar */
+  .subbar { flex:none; background:var(--surface); border-bottom:1px solid var(--border); }
+  .quickadd { display:flex; align-items:center; gap:8px; padding:10px 12px; }
+  .quickadd .box { flex:1; display:flex; align-items:center; gap:8px; background:var(--surface-2); border:1.5px solid transparent; border-radius:12px; padding:0 6px 0 12px; transition:border-color .15s, background .15s; }
+  .quickadd .box:focus-within { border-color:var(--accent); background:var(--surface); }
+  .quickadd svg { color:var(--text-faint); flex:none; }
+  .quickadd input { flex:1; border:none; background:none; outline:none; color:var(--text); font-size:15px; padding:11px 0; min-width:0; }
+  .quickadd input::placeholder { color:var(--text-faint); }
+  .quickadd .go { border:none; background:var(--accent); color:#fff; border-radius:9px; padding:0 15px; height:38px; font-size:14px; font-weight:600; flex:none; }
+  .quickadd .go:active { filter:brightness(.94); }
+
+  .chiprow { display:flex; gap:8px; overflow-x:auto; padding:10px 12px; scrollbar-width:none; }
+  .chiprow::-webkit-scrollbar { display:none; }
+  .chip { flex:none; display:inline-flex; align-items:center; gap:7px; background:var(--surface-2); border:1px solid var(--border); border-radius:20px; padding:7px 12px 7px 11px; font-size:13.5px; font-weight:600; color:var(--text); }
+  .chip:active { background:var(--accent-soft); border-color:var(--accent); }
+  .chip .em { font-size:15px; }
+  .chip .p { color:var(--accent); display:grid; place-items:center; }
+  .chip .p svg { width:15px; height:15px; }
+  .chiprow .lbl { flex:none; align-self:center; font-size:11px; font-weight:700; letter-spacing:.06em; color:var(--text-faint); padding-right:2px; }
+
+  /* screen */
+  .screen { flex:1; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; padding:14px 12px calc(20px + var(--safe-b)); }
+  .screen.has-fab { padding-bottom:calc(120px + var(--safe-b)); }
+
+  /* floating action button */
+  .fab { position:absolute; right:16px; bottom:calc(74px + var(--safe-b)); width:56px; height:56px; border-radius:19px; background:var(--accent); color:#fff; border:none; display:none; place-items:center; z-index:60; box-shadow:0 10px 22px -4px rgba(74,91,214,.55), 0 3px 8px rgba(0,0,0,.18); transition:transform .12s, filter .12s; }
+  .fab.show { display:grid; }
+  .fab:active { transform:scale(.93); filter:brightness(.96); }
+  .fab svg { width:27px; height:27px; }
+  @media (prefers-color-scheme: dark){ .fab { box-shadow:0 10px 24px -4px rgba(0,0,0,.6), 0 0 0 1px rgba(127,139,255,.25); } }
+
+  /* template cards */
+  .tplcard { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:12px; overflow:hidden; }
+  .tplcard .body { display:flex; align-items:center; gap:12px; padding:15px 14px; width:100%; border:none; background:none; text-align:left; }
+  .tplcard .body:active { background:var(--surface-hover); }
+  .tplcard .em { font-size:26px; flex:none; width:44px; height:44px; display:grid; place-items:center; background:var(--surface-2); border-radius:12px; }
+  .tplcard .tx { flex:1; min-width:0; }
+  .tplcard .tx b { display:block; font-size:16px; font-weight:700; }
+  .tplcard .tx span { display:block; font-size:12.5px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px; }
+  .tplcard .chev { color:var(--text-faint); flex:none; }
+  .tplcard .chev svg { width:20px; height:20px; }
+  .tplcard .foot { display:flex; align-items:center; border-top:1px solid var(--border); }
+  .tplcard .foot .cnt { flex:1; padding:12px 14px; font-size:12.5px; color:var(--text-faint); font-weight:600; font-variant-numeric:tabular-nums; }
+  .tplcard .foot button { border:none; background:none; padding:12px 16px; font-size:13.5px; font-weight:600; color:var(--accent); display:flex; align-items:center; gap:7px; }
+  .tplcard .foot button:active { background:var(--accent-soft); }
+  .tplcard .foot button svg { width:16px; height:16px; }
+
+  .newcard { display:flex; align-items:center; justify-content:center; gap:9px; width:100%; padding:16px; border:1.5px dashed var(--border-strong); border-radius:var(--radius); background:none; color:var(--text-dim); font-size:14.5px; font-weight:600; }
+  .newcard:active { border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
+  .newcard svg { width:16px; height:16px; }
+
+  /* today groups */
+  .group { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:12px; }
+  .group-head { display:flex; align-items:center; gap:10px; padding:12px 12px 12px 14px; border-bottom:1px solid var(--border); }
+  .group-head .em { font-size:17px; }
+  .group-head .gname { font-weight:700; font-size:15px; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .group.done-all .group-head { background:var(--done-soft); }
+  .group-body { padding:6px 8px 4px; }
+
+  .editcard { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:8px; margin-bottom:14px; }
+  .edmeta { padding:12px 8px 6px; }
+  .edmeta .desc { color:var(--text-dim); font-size:13px; }
+  .edmeta .steps { color:var(--text-faint); font-size:12.5px; margin-top:2px; }
+
+  .bigbtn { display:flex; align-items:center; justify-content:center; gap:9px; width:100%; padding:14px; border-radius:12px; border:none; font-size:15px; font-weight:700; }
+  .bigbtn.primary { background:var(--accent); color:#fff; box-shadow:var(--shadow); }
+  .bigbtn.primary:active { filter:brightness(.95); }
+  .bigbtn svg { width:18px; height:18px; }
+  .textbtn { display:block; width:100%; text-align:center; padding:14px; margin-top:6px; background:none; border:none; color:var(--text-faint); font-size:13.5px; font-weight:600; }
+  .textbtn:active { color:var(--danger); }
+
+  /* tree */
+  .tree { list-style:none; margin:0; padding:0; }
+  .node { position:relative; }
+  .row { display:flex; align-items:center; gap:8px; padding:5px 10px 5px 10px; border-radius:10px; min-height:46px; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+  .row:active { background:var(--surface-hover); }
+  .row.selected { background:var(--accent-soft); }
+  /* live drag: lifted card + tinted placeholder slot (TickTick-style) */
+  .dragcard { position:fixed; z-index:80; pointer-events:none; box-sizing:border-box; background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:0 16px 34px -8px rgba(20,24,48,.42), 0 3px 10px rgba(0,0,0,.12); display:flex; align-items:center; gap:8px; padding:6px 10px; transition:left .14s ease, width .14s ease; }
+  .dragcard .grip { display:none; }
+  .node.dragging-node > .children { display:none; }
+  .row.drag-live { background:var(--accent-soft); border-radius:10px; box-shadow:inset 0 0 0 1.5px var(--accent); }
+  .row.drag-live > * { visibility:hidden; }
+  .dragging { cursor:grabbing; }
+  .dragging .screen { overflow:hidden; touch-action:none; }
+  .dragging .row, .dragging .title, .dragging .check { touch-action:none; }
+  @media (prefers-color-scheme: dark){ .dragcard { box-shadow:0 16px 36px -8px rgba(0,0,0,.7), 0 0 0 1px rgba(127,139,255,.18); } }
+
+  .check { width:26px; height:26px; flex:none; border-radius:8px; border:2px solid var(--border-strong); background:var(--surface); display:grid; place-items:center; padding:0; transition:all .13s; }
+  .check:active { transform:scale(.92); }
+  .check svg { opacity:0; transform:scale(.5); transition:all .13s; color:#fff; width:15px; height:15px; }
+  .check.partial { border-color:var(--accent); }
+  .check.partial::after { content:""; width:11px; height:2.5px; border-radius:2px; background:var(--accent); }
+  .check.done { background:var(--done); border-color:var(--done); }
+  .check.done svg { opacity:1; transform:scale(1); }
+
+  .tmark { width:26px; height:26px; flex:none; display:grid; place-items:center; }
+  .tmark i { width:11px; height:11px; border-radius:4px; box-sizing:border-box; }
+  .tmark i.parent { background:var(--railc); }
+  .tmark i.leaf { border:2.5px solid var(--railc); }
+
+  .title { flex:1; min-width:0; padding:6px 4px; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .row.is-done > .title { color:var(--text-faint); text-decoration:line-through; text-decoration-thickness:1.5px; }
+  .title[contenteditable="true"]{ outline:none; white-space:normal; overflow:visible; user-select:text; -webkit-user-select:text; }
+
+  .badge { font-size:11px; font-weight:700; color:var(--text-faint); background:var(--surface-2); border-radius:20px; padding:2px 8px; font-variant-numeric:tabular-nums; flex:none; }
+  .badge.full { color:var(--done); background:var(--done-soft); }
+  .pbar { width:30px; height:5px; border-radius:3px; background:var(--surface-2); overflow:hidden; flex:none; }
+  .pbar > i { display:block; height:100%; background:var(--accent); border-radius:3px; transition:width .35s; }
+  .pbar.full > i { background:var(--done); }
+
+  .children { list-style:none; margin:0; padding:0 0 0 26px; position:relative; }
+
+  .listadd { display:flex; align-items:center; gap:7px; margin:2px 4px 6px; padding:9px 8px; color:var(--text-faint); font-size:13.5px; border:none; background:none; border-radius:8px; width:calc(100% - 8px); }
+  .listadd:active { color:var(--accent); background:var(--surface-hover); }
+  .listadd svg { width:15px; height:15px; }
+
+  .empty { text-align:center; color:var(--text-faint); padding:48px 24px; }
+  .empty svg { opacity:.5; margin-bottom:12px; }
+  .empty p { margin:0 0 4px; font-size:14.5px; }
+  .empty .s { font-size:13px; }
+
+  /* drag ghost + drop line */
+  .dragghost { position:fixed; z-index:80; pointer-events:none; background:var(--surface); border:1.5px solid var(--border-strong); border-radius:11px; padding:9px 13px; font-size:14px; font-weight:700; box-shadow:0 12px 28px -8px rgba(20,24,48,.4); max-width:calc(100vw - 24px); display:flex; align-items:center; gap:7px; }
+  .dragghost .gico { flex:none; width:17px; height:17px; display:grid; place-items:center; font-size:14px; line-height:1; border-radius:5px; }
+  .dragghost .gtxt { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+  .dragghost.act-child { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .dragghost.act-child .gico { background:rgba(255,255,255,.22); }
+  .dragghost.act-before, .dragghost.act-after { border-color:var(--accent); color:var(--accent); }
+  .dragghost.act-before .gico, .dragghost.act-after .gico { color:var(--accent); }
+  /* between-rows insertion (sibling reorder) */
+  .dropline { position:fixed; z-index:79; height:3px; background:var(--accent); border-radius:3px; pointer-events:none; display:none; }
+  .dropline::before { content:""; position:absolute; left:-5px; top:50%; width:9px; height:9px; border-radius:50%; background:var(--accent); transform:translateY(-50%); box-shadow:0 0 0 3px var(--accent-soft); }
+  /* nested insertion (drop as child) — sits deeper, with an elbow */
+  .dropline.as-child { height:3px; background:var(--accent); }
+  .dropline.as-child::before { content:""; left:-9px; top:-7px; width:8px; height:11px; border:0 solid var(--accent); border-left-width:3px; border-bottom-width:3px; border-radius:0 0 0 5px; background:none; box-shadow:none; }
+
+  /* bottom tab bar */
+  .tabbar { flex:none; display:flex; background:var(--surface); border-top:1px solid var(--border); padding-bottom:var(--safe-b); }
+  .tabbar button { flex:1; border:none; background:none; padding:9px 4px 8px; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--text-faint); font-size:11px; font-weight:600; }
+  .tabbar button svg { width:24px; height:24px; }
+  .tabbar button.active { color:var(--accent); }
+  .tabbar .themebtn { flex:0 0 66px; color:var(--text-faint); }
+
+  /* action sheet */
+  .sheet-overlay { position:fixed; inset:0; z-index:90; background:rgba(15,17,25,.42); display:flex; align-items:flex-end; justify-content:center; opacity:0; transition:opacity .2s; }
+  .sheet-overlay.show { opacity:1; }
+  .sheet { width:100%; max-width:520px; background:var(--surface); border-radius:20px 20px 0 0; padding:8px 10px calc(14px + var(--safe-b)); transform:translateY(100%); transition:transform .24s cubic-bezier(.3,.9,.3,1); box-shadow:0 -8px 30px -10px rgba(0,0,0,.35); }
+  .sheet-overlay.show .sheet { transform:translateY(0); }
+  .sheet-grab { width:38px; height:4px; border-radius:3px; background:var(--border-strong); margin:6px auto 8px; }
+  .sheet-title { font-size:13px; font-weight:700; color:var(--text-dim); padding:4px 12px 10px; display:flex; align-items:center; gap:8px; }
+  .sheet-title .em { font-size:16px; }
+  .sheet-title .tt { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sheet-item { display:flex; align-items:center; gap:13px; width:100%; border:none; background:none; padding:15px 14px; font-size:15px; font-weight:600; color:var(--text); border-radius:12px; text-align:left; }
+  .sheet-item:active { background:var(--surface-hover); }
+  .sheet-item svg { width:20px; height:20px; color:var(--text-dim); flex:none; }
+  .sheet-item.danger { color:var(--danger); }
+  .sheet-item.danger svg { color:var(--danger); }
+  .sheet-cancel { width:100%; border:none; background:var(--surface-2); padding:14px; margin-top:6px; border-radius:12px; font-size:15px; font-weight:700; color:var(--text-dim); }
+
+  @media (prefers-reduced-motion: reduce){ * { transition:none !important; } }
+</style>
+
+<div class="app">
+  <header class="appbar" id="appbar"></header>
+  <div class="subbar" id="subbar"></div>
+  <main class="screen" id="screen"></main>
+  <button class="fab" id="fab" title="追加" aria-label="追加">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
+  </button>
+  <nav class="tabbar">
+    <button data-mode="template" id="tabTpl">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M4 5v14h16V5M4 10h16M9 10v9" stroke-linejoin="round"/></svg>
+      テンプレート
+    </button>
+    <button data-mode="today" id="tabToday">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L20 6M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      本日のタスク
+    </button>
+    <button class="themebtn" id="themeBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.6 6.6 0 0 0 9.8 9.8z" stroke-linejoin="round"/></svg>
+      <span id="themeLabel">ダーク</span>
+    </button>
+  </nav>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  let uid = 1;
+  const nid = () => "n" + (uid++);
+  const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+  const el = (id) => document.getElementById(id);
+
+  const S = (title, children) => ({ id: nid(), title, children: children || [] });
+  const I = (title, children, done) => ({ id: nid(), title, done: !!done, collapsed: false, children: children || [] });
+
+  // ---------- data ----------
+  let templates = [
+    { id: nid(), emoji:"☀️", name:"朝のルーティン", desc:"毎朝これをこなして一日をスタート", tree:[
+      S("水をコップ1杯飲む"), S("ストレッチ 5分"),
+      S("今日の予定を確認する", [ S("カレンダーを見る"), S("今日やることを3つ決める") ]),
+    ]},
+    { id: nid(), emoji:"📊", name:"提案資料の作成", desc:"提案スライドを1本仕上げるまでの手順", tree:[
+      S("構成をざっくり決める"),
+      S("スライドを作成する", [ S("表紙・目次"), S("課題の整理"), S("提案内容", [ S("要点を3つに絞る"), S("図解を1枚入れる") ]), S("見積り・スケジュール") ]),
+      S("上司にレビューを依頼する"), S("フィードバックを反映する"),
+    ]},
+    { id: nid(), emoji:"🔄", name:"週次レビュー", desc:"1週間を振り返って翌週に備える", tree:[
+      S("今週の完了タスクを振り返る"), S("やり残しを棚卸しする"),
+      S("来週の計画を立てる", [ S("重要タスクを3つ選ぶ"), S("カレンダーに枠を確保する") ]),
+    ]},
+  ];
+
+  let mode = "template", tplView = "list", currentTplId = null;
+
+  const cloneTree = (nodes) => nodes.map(n => ({ id:nid(), title:n.title, done:false, collapsed:false, children:cloneTree(n.children) }));
+  const instantiate = (t) => ({ id:nid(), templateId:t.id, emoji:t.emoji, name:t.name, items:cloneTree(t.tree) });
+
+  let today = [ instantiate(templates[0]) ];
+  today[0].items[0].done = true; today[0].items[1].done = true;
+  today.push({ id:nid(), templateId:null, emoji:"📝", name:"個別のタスク", items:[ I("メールの返信") ] });
+
+  // ---------- persistence (localStorage) + import / export ----------
+  const STORE_KEY = "hinagata-tasks-v1";
+  const DATA_VERSION = 1;
+  const serialize = () => ({ app: "hinagata-tasks", version: DATA_VERSION, exportedAt: new Date().toISOString(), templates, today });
+  const advanceUid = () => {
+    let max = 0;
+    const scan = (n) => { const m = /^n(\d+)$/.exec(n.id || ""); if (m) max = Math.max(max, +m[1]); (n.children || []).forEach(scan); };
+    templates.forEach(t => (t.tree || []).forEach(scan));
+    today.forEach(g => (g.items || []).forEach(scan));
+    uid = max + 1;
+  };
+  const save = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify({ version: DATA_VERSION, templates, today })); } catch (_) {} };
+  let saveTimer = null;
+  const scheduleSave = () => { clearTimeout(saveTimer); saveTimer = setTimeout(save, 400); };
+  const loadState = () => {
+    let raw; try { raw = localStorage.getItem(STORE_KEY); } catch (_) { return false; }
+    if (!raw) return false;
+    try {
+      const d = JSON.parse(raw);
+      if (!d || !Array.isArray(d.templates)) return false;
+      templates = d.templates;
+      today = Array.isArray(d.today) ? d.today : [];
+      advanceUid();
+      return true;
+    } catch (_) { return false; }
+  };
+  const applyImported = (d) => {
+    if (!d || !Array.isArray(d.templates)) throw new Error("テンプレートが見つかりません");
+    templates = d.templates;
+    today = Array.isArray(d.today) ? d.today : [];
+    advanceUid(); save();
+    currentTplId = null; mode = "template"; tplView = "list"; render();
+  };
+  const exportData = () => {
+    try {
+      const blob = new Blob([JSON.stringify(serialize(), null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const d = new Date(), p = (n) => String(n).padStart(2, "0");
+      a.href = url; a.download = `hinagata-tasks-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}.json`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } catch (e) { alert("エクスポートに失敗しました: " + e.message); }
+  };
+  const importData = () => {
+    const inp = document.createElement("input");
+    inp.type = "file"; inp.accept = "application/json,.json";
+    inp.onchange = () => {
+      const f = inp.files && inp.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = () => {
+        let d; try { d = JSON.parse(r.result); } catch (_) { alert("JSONの読み込みに失敗しました。ファイルを確認してください。"); return; }
+        if (!d || !Array.isArray(d.templates)) { alert("このファイルはひな形タスクのバックアップではないようです。"); return; }
+        if (!confirm("現在のデータを、読み込んだ内容で置き換えます。よろしいですか？")) return;
+        try { applyImported(d); alert("インポートが完了しました。"); }
+        catch (e) { alert("インポートに失敗しました: " + e.message); }
+      };
+      r.readAsText(f);
+    };
+    inp.click();
+  };
+
+  // ---------- helpers ----------
+  const leaves = (n) => n.children.length ? n.children.flatMap(leaves) : [n];
+  const isLeaf = (n) => n.children.length === 0;
+  const doneCount = (n) => leaves(n).filter(l => l.done).length;
+  const leafCount = (n) => leaves(n).length;
+  const nodeDone = (n) => isLeaf(n) ? !!n.done : leaves(n).every(l => l.done);
+  const setSubtree = (n, v) => { if (isLeaf(n)) n.done = v; else n.children.forEach(c => setSubtree(c, v)); };
+  const countSteps = (tree) => tree.reduce((a, n) => a + (isLeaf(n) ? 1 : countSteps(n.children)), 0);
+  const removeById = (id, nodes) => { const i = nodes.findIndex(x => x.id === id); if (i >= 0) { nodes.splice(i,1); return true; } return nodes.some(x => removeById(id, x.children)); };
+  const findInfo = (id, arr, parent) => { for (let i=0;i<arr.length;i++){ if (arr[i].id===id) return { arr, i, parent, node:arr[i] }; const r=findInfo(id, arr[i].children, arr[i]); if (r) return r; } return null; };
+  const isDesc = (node, id) => node.children.some(c => c.id === id || isDesc(c, id));
+
+  // ---------- inline edit (re-entrancy safe) ----------
+  const startEdit = (node2, node, after) => {
+    node2.contentEditable = "true"; node2.focus();
+    const r = document.createRange(); r.selectNodeContents(node2);
+    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    let committed = false;
+    const finish = (cancel) => {
+      if (committed) return; committed = true;
+      node2.contentEditable = "false";
+      if (!cancel) { const v = node2.textContent.trim(); if (v) node.title = v; }
+      render(); if (after) after();
+    };
+    node2.addEventListener("blur", () => finish(false), { once:true });
+    node2.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); node2.blur(); }
+      else if (e.key === "Escape") { e.preventDefault(); node2.textContent = node.title; node2.blur(); }
+    });
+  };
+
+  // ---------- svg ----------
+  const CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4"><path d="M4 12l5 5L20 6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const TWIST = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M8 5l8 7-8 7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const ADD = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 6v12M6 12h12" stroke-linecap="round"/></svg>`;
+  const DEL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 7h14M9 7V5h6v2M6 7l1 12h10l1-12" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const CHEV = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const BACK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 5l-7 7 7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const GRIP = `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>`;
+  const PENCIL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20h4L18.5 9.5l-4-4L4 16v4zM13.5 6.5l4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const FOLD = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+  // ---------- drag & drop (long-press + outliner-style indent) ----------
+  // Press-and-hold a row to pick it up. Move up/down to reorder, move left/right
+  // to change its depth (outdent / indent). The tree previews the result live.
+  const INDENT = 26;                 // px per depth level (matches .children padding-left)
+  const LONGPRESS_MS = 320;
+  let dragging = false, suppressTap = false, activeDragEnd = null;
+  // Global safety net: ANY genuine release ends an active drag, so the screen can never
+  // stay locked ("frozen"). Capture phase, and pointercancel is deliberately excluded
+  // (it also fires spuriously when a re-render detaches the row under the finger).
+  ["pointerup", "touchend", "touchcancel"].forEach((t) =>
+    document.addEventListener(t, () => { if (activeDragEnd) activeDragEnd(); }, true));
+
+  // arm a long-press on pointerdown; a quick tap falls through to the tap handlers
+  const armLongPress = (e, node, treeRoot) => {
+    if (dragging) return;
+    if (e.target.closest(".check") || e.target.isContentEditable) return;   // let checkbox / editing work
+    if (e.button != null && e.button !== 0) return;
+    const srcRow = e.currentTarget;
+    const touchTarget = e.target;   // the exact element the touch started on — keeps receiving touch events even after re-render detaches it
+    const sx = e.clientX, sy = e.clientY;
+    let timer = setTimeout(() => { timer = null; cleanup(); beginDrag(node, treeRoot, srcRow, sx, sy, touchTarget); }, LONGPRESS_MS);
+    const onMove = (ev) => { if (Math.abs(ev.clientX - sx) > 8 || Math.abs(ev.clientY - sy) > 8) { clear(); } };
+    const onEnd = () => clear();
+    const clear = () => { if (timer) { clearTimeout(timer); timer = null; } cleanup(); };
+    const cleanup = () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onEnd); window.removeEventListener("pointercancel", onEnd); };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onEnd);
+    window.addEventListener("pointercancel", onEnd);
+  };
+
+  const beginDrag = (node, treeRoot, srcRow, sx, sy, touchTarget) => {
+    if (dragging) return;
+    dragging = true;
+    const dragId = node.id;
+    const dragNode = node;
+    const startX = sx;
+    const startDepth = depthOf(dragId, treeRoot);
+    const rowRect = srcRow.getBoundingClientRect();
+    const grabDY = sy - rowRect.top;
+    const cardInner = srcRow.innerHTML;
+    const snapshot = JSON.parse(JSON.stringify(treeRoot));
+    let lastSig = null;
+
+    const ghost = document.createElement("div");
+    ghost.className = "dragcard"; ghost.innerHTML = cardInner;
+    ghost.style.left = rowRect.left + "px"; ghost.style.width = rowRect.width + "px"; ghost.style.top = (sy - grabDY) + "px";
+    document.body.appendChild(ghost);
+    document.body.classList.add("dragging");
+
+    const decorate = () => {
+      document.querySelectorAll(".node.dragging-node").forEach(n => n.classList.remove("dragging-node"));
+      document.querySelectorAll(".row.drag-live").forEach(r => r.classList.remove("drag-live"));
+      const nodeEl = document.querySelector(`[data-nid="${dragId}"]`);
+      if (!nodeEl) return;
+      nodeEl.classList.add("dragging-node");
+      const r = nodeEl.querySelector(":scope > .row");
+      if (r) { r.classList.add("drag-live"); const rr = r.getBoundingClientRect(); ghost.style.left = rr.left + "px"; ghost.style.width = rr.width + "px"; }
+    };
+    decorate();
+
+    // flatten the tree (excluding the dragged subtree) in visual order
+    const buildFlat = () => {
+      const out = [];
+      const walk = (arr, depth) => { for (const n of arr) { if (n.id === dragId) continue; out.push({ id: n.id, node: n, depth }); if (n.children.length) walk(n.children, depth + 1); } };
+      walk(treeRoot, 0);
+      return out;
+    };
+    // rebuild nested tree from a flat list of {node, depth}; keep the dragged node's own subtree
+    const rebuild = (flat) => {
+      const roots = [], stack = [];
+      for (const it of flat) {
+        if (it.node.id !== dragId) it.node.children = [];
+        while (stack.length && stack[stack.length - 1].depth >= it.depth) stack.pop();
+        if (!stack.length) roots.push(it.node); else stack[stack.length - 1].node.children.push(it.node);
+        stack.push({ node: it.node, depth: it.depth });
+      }
+      treeRoot.length = 0; roots.forEach(n => treeRoot.push(n));
+    };
+
+    const move = (ev) => {
+      const x = ev.clientX, y = ev.clientY;
+      ghost.style.top = (y - grabDY) + "px";
+      const flat = buildFlat();
+      // insertion index from pointer Y
+      let overIndex = flat.length;
+      for (let i = 0; i < flat.length; i++) {
+        const rEl = document.querySelector(`[data-nid="${flat[i].id}"] > .row`);
+        if (!rEl) continue;
+        const r = rEl.getBoundingClientRect();
+        if (y < r.top + r.height / 2) { overIndex = i; break; }
+      }
+      const prev = flat[overIndex - 1], next = flat[overIndex];
+      const maxDepth = prev ? prev.depth + 1 : 0;
+      const minDepth = next ? next.depth : 0;
+      let depth = startDepth + Math.round((x - startX) / INDENT);
+      depth = Math.max(minDepth, Math.min(maxDepth, depth));
+      const sig = overIndex + ":" + depth;
+      if (sig === lastSig) return;
+      lastSig = sig;
+      const flat2 = flat.slice(); flat2.splice(overIndex, 0, { id: dragId, node: dragNode, depth });
+      rebuild(flat2);
+      const st = el("screen").scrollTop; render(); el("screen").scrollTop = st;
+      decorate();
+    };
+    // Each move re-renders the tree, DETACHING the element the finger is on. Touch events keep
+    // dispatching to that original element even after it's detached — so touch listeners MUST be on
+    // `touchTarget` (not window), or they'd stop firing and the drag would freeze/never end.
+    // Mouse/pen has no such issue and is driven by window pointer events.
+    const onTouchMove = (ev) => { if (ev.cancelable) ev.preventDefault(); const t = ev.touches[0] || ev.changedTouches[0]; if (t) move(t); };
+    const onPtrMove = (ev) => move(ev);   // real touch also covered by onTouchMove; sig-check dedupes
+    const onEndUp = () => finish(false);
+    const onKey = (ev) => { if (ev.key === "Escape") finish(true); };
+    const finish = (cancel) => {
+      if (!dragging) return;              // idempotent: multiple end events may fire
+      activeDragEnd = null;
+      touchTarget.removeEventListener("touchmove", onTouchMove);
+      touchTarget.removeEventListener("touchend", onEndUp);
+      touchTarget.removeEventListener("touchcancel", onEndUp);
+      window.removeEventListener("pointermove", onPtrMove);
+      window.removeEventListener("pointerup", onEndUp);
+      window.removeEventListener("blur", onEndUp);
+      window.removeEventListener("keydown", onKey);
+      ghost.remove();
+      document.body.classList.remove("dragging");
+      document.querySelectorAll(".node.dragging-node").forEach(n => n.classList.remove("dragging-node"));
+      document.querySelectorAll(".row.drag-live").forEach(r => r.classList.remove("drag-live"));
+      if (cancel) { treeRoot.length = 0; snapshot.forEach(n => treeRoot.push(n)); }
+      dragging = false; suppressTap = true; setTimeout(() => { suppressTap = false; }, 60);
+      const st = el("screen").scrollTop; render(); el("screen").scrollTop = st;
+    };
+    // touch: on the original target (survives detachment) · mouse/pen: on window · pointercancel: ignored
+    activeDragEnd = () => finish(false);
+    touchTarget.addEventListener("touchmove", onTouchMove, { passive: false });
+    touchTarget.addEventListener("touchend", onEndUp);
+    touchTarget.addEventListener("touchcancel", onEndUp);
+    window.addEventListener("pointermove", onPtrMove);
+    window.addEventListener("pointerup", onEndUp);
+    window.addEventListener("blur", onEndUp);
+    window.addEventListener("keydown", onKey);
+  };
+
+  const depthOf = (id, arr, d = 0) => { for (const n of arr) { if (n.id === id) return d; if (n.children.length) { const r = depthOf(id, n.children, d + 1); if (r >= 0) return r; } } return -1; };
+
+  // ---------- action sheet ----------
+  let sheetEl = null;
+  const closeSheet = () => { if (!sheetEl) return; const s = sheetEl; sheetEl = null; s.classList.remove("show"); setTimeout(() => s.remove(), 240); };
+  const openSheet = (node, kind, treeRoot) => {
+    closeSheet();
+    const ov = document.createElement("div"); ov.className = "sheet-overlay";
+    const item = (cls, svg, label) => `<button class="sheet-item ${cls}">${svg}<span>${label}</span></button>`;
+    ov.innerHTML = `<div class="sheet">
+      <div class="sheet-grab"></div>
+      <div class="sheet-title"><span class="tt">${esc(node.title)}</span></div>
+      ${item("act-add", ADD, "サブタスクを追加")}
+      ${item("act-rename", PENCIL, "名前を変更")}
+      ${item("act-del danger", DEL, "削除")}
+      <button class="sheet-cancel">キャンセル</button>
+    </div>`;
+    document.body.appendChild(ov); sheetEl = ov;
+    requestAnimationFrame(() => ov.classList.add("show"));
+    const panel = ov.querySelector(".sheet");
+    ov.addEventListener("pointerdown", (e) => { if (!panel.contains(e.target)) closeSheet(); });
+    ov.querySelector(".sheet-cancel").onclick = closeSheet;
+    ov.querySelector(".act-add").onclick = () => { closeSheet(); addChild(node, kind); };
+    ov.querySelector(".act-rename").onclick = () => { closeSheet(); requestAnimationFrame(() => { const t = document.querySelector(`[data-nid="${node.id}"] > .row > .title`); if (t) startEdit(t, node); }); };
+    ov.querySelector(".act-del").onclick = () => { closeSheet(); removeById(node.id, treeRoot); render(); };
+  };
+
+  // ---------- node renderer ----------
+  const renderNode = (n, depth, kind, treeRoot) => {
+    const li = document.createElement("li");
+    li.className = "node";
+    li.dataset.nid = n.id;
+    li.style.setProperty("--railc", `var(--d${Math.min(depth,5)})`);
+    const leaf = isLeaf(n);
+    const done = kind === "today" && nodeDone(n);
+
+    const row = document.createElement("div");
+    row.className = "row" + (done ? " is-done" : "");
+
+    if (kind === "today") {
+      const dc = doneCount(n);
+      const cb = document.createElement("button");
+      cb.className = "check" + (done ? " done" : (!leaf && dc > 0 ? " partial" : ""));
+      cb.innerHTML = CHECK;
+      cb.onclick = (e) => { e.stopPropagation(); setSubtree(n, !done); render(); };
+      row.appendChild(cb);
+    } else {
+      const mk = document.createElement("span");
+      mk.className = "tmark"; mk.innerHTML = `<i class="${leaf ? "leaf" : "parent"}"></i>`;
+      row.appendChild(mk);
+    }
+
+    const tt = document.createElement("div");
+    tt.className = "title"; tt.textContent = n.title;
+    tt.onclick = () => { if (suppressTap || dragging) return; openSheet(n, kind, treeRoot); };
+    tt.ondblclick = () => startEdit(tt, n);
+    row.appendChild(tt);
+
+    if (!leaf) {
+      const dc = doneCount(n), lc = leafCount(n);
+      if (kind === "today") {
+        const full = dc === lc;
+        const bar = document.createElement("span"); bar.className = "pbar" + (full ? " full" : "");
+        bar.innerHTML = `<i style="width:${lc ? dc/lc*100 : 0}%"></i>`;
+        const badge = document.createElement("span"); badge.className = "badge" + (full ? " full" : "");
+        badge.textContent = `${dc}/${lc}`;
+        row.append(bar, badge);
+      } else {
+        const badge = document.createElement("span"); badge.className = "badge";
+        badge.textContent = `${lc}`;
+        row.append(badge);
+      }
+    }
+
+    row.addEventListener("pointerdown", (e) => armLongPress(e, n, treeRoot));
+
+    li.appendChild(row);
+
+    if (!leaf) {
+      const ul = document.createElement("ul"); ul.className = "children";
+      n.children.forEach(c => ul.appendChild(renderNode(c, depth+1, kind, treeRoot)));
+      li.appendChild(ul);
+    }
+    return li;
+  };
+
+  const addChild = (parent, kind) => {
+    const child = kind === "today" ? I("新しいサブタスク") : S("新しいサブタスク");
+    parent.children.push(child); render();
+    requestAnimationFrame(() => { const e2 = document.querySelector(`[data-nid="${child.id}"] > .row > .title`); if (e2) startEdit(e2, child); });
+  };
+
+  // ---------- appbar ----------
+  const setAppbar = (opts) => {
+    const bar = el("appbar"); bar.innerHTML = "";
+    const left = document.createElement("div"); left.className = "slot";
+    if (opts.back) { const b = document.createElement("button"); b.className = "iconbtn-lg"; b.innerHTML = BACK; b.onclick = opts.back; left.appendChild(b); }
+    const tw = document.createElement("div"); tw.className = "titlewrap";
+    tw.innerHTML = (opts.eyebrow ? `<div class="eyebrow">${esc(opts.eyebrow)}</div>` : "") +
+      `<h1>${opts.emoji ? `<span class="em" id="abEmoji">${opts.emoji}</span>` : ""}<span id="abTitle">${esc(opts.title)}</span></h1>`;
+    bar.append(left, tw);
+    if (opts.right) bar.appendChild(opts.right);
+  };
+
+  const dateLine = () => {
+    const now = new Date(2026, 6, 20);
+    const wd = ["日","月","火","水","木","金","土"][now.getDay()];
+    return `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日（${wd}）`;
+  };
+  const ADDsvg = () => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>`;
+  const bindQuickAdd = (handler) => {
+    const input = el("qinput"), go = el("qgo");
+    const submit = () => { if (handler()) { render(); requestAnimationFrame(() => { const i = el("qinput"); if (i) i.focus(); }); } };
+    go.onclick = submit;
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") submit(); });
+  };
+
+  // ---------- template list ----------
+  const renderTplList = () => {
+    setAppbar({ eyebrow:"テンプレート", title:"ひな形の一覧", right: menuBtn() });
+    el("subbar").style.display = "none";
+    const s = el("screen"); s.innerHTML = "";
+    templates.forEach(t => {
+      const card = document.createElement("div"); card.className = "tplcard";
+      const body = document.createElement("button"); body.className = "body";
+      body.innerHTML = `<span class="em">${t.emoji}</span>
+        <span class="tx"><b>${esc(t.name)}</b><span>${esc(t.desc || "説明なし")}</span></span>
+        <span class="chev">${CHEV}</span>`;
+      body.onclick = () => { currentTplId = t.id; tplView = "edit"; render(); };
+      const foot = document.createElement("div"); foot.className = "foot";
+      foot.innerHTML = `<span class="cnt">${countSteps(t.tree)} ステップ</span>`;
+      const applyBtn = document.createElement("button"); applyBtn.innerHTML = `${ADD} 本日に追加`;
+      applyBtn.onclick = () => { today.push(instantiate(t)); mode = "today"; render(); };
+      foot.appendChild(applyBtn);
+      card.append(body, foot);
+      s.appendChild(card);
+    });
+    const nb = document.createElement("button"); nb.className = "newcard"; nb.innerHTML = `${ADD} 新しいテンプレート`;
+    nb.onclick = () => {
+      const t = { id:nid(), emoji:"🗂️", name:"新しいテンプレート", desc:"", tree:[] };
+      templates.push(t); currentTplId = t.id; tplView = "edit"; render();
+      requestAnimationFrame(() => { const e2 = el("abTitle"); if (e2) startEdit(e2, t); });
+    };
+    s.appendChild(nb);
+  };
+
+  // ---------- template edit ----------
+  const renderTplEdit = () => {
+    const tpl = templates.find(t => t.id === currentTplId);
+    if (!tpl) { tplView = "list"; return renderTplList(); }
+    const del = document.createElement("button"); del.className = "iconbtn-lg danger"; del.innerHTML = DEL; del.title = "テンプレートを削除";
+    del.onclick = () => { if (!confirm(`テンプレート「${tpl.name}」を削除しますか？`)) return; templates = templates.filter(t => t.id !== tpl.id); tplView = "list"; render(); };
+    const applyBtn = document.createElement("button"); applyBtn.className = "abbtn"; applyBtn.innerHTML = `${ADD}<span>本日に追加</span>`;
+    applyBtn.onclick = () => { today.push(instantiate(tpl)); mode = "today"; render(); };
+    const rightWrap = document.createElement("div"); rightWrap.className = "ab-actions"; rightWrap.append(applyBtn, del);
+    setAppbar({ back: () => { tplView = "list"; render(); }, emoji: tpl.emoji, title: tpl.name, right: rightWrap });
+    el("abTitle").ondblclick = (e) => startEdit(e.target, tpl);
+    el("abEmoji").onclick = () => { const v = prompt("絵文字を入力", tpl.emoji); if (v && v.trim()) { tpl.emoji = v.trim(); render(); } };
+
+    el("subbar").style.display = "none";
+
+    const s = el("screen"); s.innerHTML = "";
+    const meta = document.createElement("div"); meta.className = "edmeta";
+    meta.innerHTML = `<div class="desc">${esc(tpl.desc || "このテンプレートに説明はまだありません")}</div><div class="steps">全 ${countSteps(tpl.tree)} ステップ ・ 行を長押しで移動（左右で階層変更）、タップで操作</div>`;
+    s.appendChild(meta);
+
+    const card = document.createElement("div"); card.className = "editcard";
+    if (!tpl.tree.length) {
+      card.innerHTML = `<div class="empty" style="padding:28px"><p>まだステップがありません</p><p class="s">右下の＋ボタンから追加しましょう。</p></div>`;
+    } else {
+      const ul = document.createElement("ul"); ul.className = "tree";
+      tpl.tree.forEach(n => ul.appendChild(renderNode(n, 1, "template", tpl.tree)));
+      card.appendChild(ul);
+    }
+    s.appendChild(card);
+  };
+
+  // ---------- today ----------
+  const renderToday = () => {
+    const allLeaves = today.flatMap(g => g.items.flatMap(leaves));
+    const dn = allLeaves.filter(l => l.done).length;
+    const pct = allLeaves.length ? Math.round(dn/allLeaves.length*100) : 0;
+    const C = 2 * Math.PI * 15;
+    const ring = document.createElement("div"); ring.className = "ring";
+    ring.innerHTML = `<div class="pct"><b>${pct}%</b></div>
+      <svg width="38" height="38" viewBox="0 0 38 38"><circle class="track" cx="19" cy="19" r="15" fill="none" stroke-width="5"/>
+      <circle class="fill" cx="19" cy="19" r="15" fill="none" stroke-width="5" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-pct/100)}"/></svg>`;
+    const rightWrap = document.createElement("div"); rightWrap.style.cssText = "display:flex;align-items:center;gap:2px";
+    rightWrap.append(ring, menuBtn());
+    setAppbar({ eyebrow:"本日のタスク", title:dateLine(), right:rightWrap });
+
+    const sb = el("subbar"); sb.style.display = ""; sb.innerHTML = "";
+    const chips = document.createElement("div"); chips.className = "chiprow";
+    chips.innerHTML = `<span class="lbl">ひな形から</span>`;
+    templates.forEach(t => {
+      const c = document.createElement("button"); c.className = "chip";
+      c.innerHTML = `<span class="em">${t.emoji}</span>${esc(t.name)}<span class="p">${ADD}</span>`;
+      c.onclick = () => { today.push(instantiate(t)); render(); };
+      chips.appendChild(c);
+    });
+    sb.appendChild(chips);
+
+    const s = el("screen"); s.innerHTML = "";
+    if (!today.length) {
+      s.innerHTML = `<div class="empty"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 5h16M4 5v14h16V5M4 10h16M9 10v9" stroke-linejoin="round"/></svg>
+        <p>本日のタスクはまだありません</p><p class="s">上の「ひな形から」をタップして組み立てましょう。</p></div>`;
+      return;
+    }
+    today.forEach(g => {
+      const gLeaves = g.items.flatMap(leaves);
+      const gDone = gLeaves.filter(l => l.done).length;
+      const allDone = gLeaves.length && gDone === gLeaves.length;
+      const card = document.createElement("div"); card.className = "group" + (allDone ? " done-all" : "");
+      const head = document.createElement("div"); head.className = "group-head";
+      head.innerHTML = `<span class="em">${g.emoji}</span><span class="gname">${esc(g.name)}</span><span class="badge${allDone ? " full" : ""}">${gDone}/${gLeaves.length}</span>`;
+      const rm = document.createElement("button"); rm.className = "iconbtn-lg danger"; rm.style.width = "36px"; rm.style.height = "36px"; rm.innerHTML = DEL; rm.title = "本日から外す";
+      rm.onclick = () => { today = today.filter(x => x.id !== g.id); render(); };
+      head.appendChild(rm);
+      card.appendChild(head);
+      const body = document.createElement("div"); body.className = "group-body";
+      if (g.items.length) {
+        const ul = document.createElement("ul"); ul.className = "tree";
+        g.items.forEach(n => ul.appendChild(renderNode(n, 1, "today", g.items)));
+        body.appendChild(ul);
+      }
+      const as = document.createElement("button"); as.className = "listadd"; as.innerHTML = `${ADD} タスクを追加`;
+      as.onclick = () => { const child = I("新しいタスク"); g.items.push(child); render(); requestAnimationFrame(() => { const e2 = document.querySelector(`[data-nid="${child.id}"] > .row > .title`); if (e2) startEdit(e2, child); }); };
+      body.appendChild(as);
+      card.appendChild(body);
+      s.appendChild(card);
+    });
+  };
+
+  // ---------- floating add button ----------
+  const focusNew = (node) => requestAnimationFrame(() => {
+    const t = document.querySelector(`[data-nid="${node.id}"] > .row > .title`);
+    if (t) { t.scrollIntoView({ block: "center", behavior: "smooth" }); startEdit(t, node); }
+  });
+  const fabAdd = () => {
+    if (mode === "today") {
+      let g = today.find(x => x.templateId === null);
+      if (!g) { g = { id:nid(), templateId:null, emoji:"📝", name:"個別のタスク", items:[] }; today.push(g); }
+      const child = I("新しいタスク"); g.items.push(child); render(); focusNew(child);
+    } else if (mode === "template" && tplView === "edit") {
+      const tpl = templates.find(t => t.id === currentTplId); if (!tpl) return;
+      const step = S("新しいステップ"); tpl.tree.push(step); render(); focusNew(step);
+    }
+  };
+  el("fab").onclick = fabAdd;
+
+  // ---------- data menu ----------
+  const svgMore = `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg>`;
+  const svgExport = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v11M8 10l4 4 4-4M5 20h14" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const svgImport = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 15V4M8 8l4-4 4 4M5 20h14" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const openDataSheet = () => {
+    closeSheet();
+    const ov = document.createElement("div"); ov.className = "sheet-overlay";
+    ov.innerHTML = `<div class="sheet">
+      <div class="sheet-grab"></div>
+      <div class="sheet-title"><span class="tt">データ</span></div>
+      <button class="sheet-item act-export">${svgExport}<span>エクスポート（バックアップを保存）</span></button>
+      <button class="sheet-item act-import">${svgImport}<span>インポート（バックアップから復元）</span></button>
+      <button class="sheet-cancel">閉じる</button>
+    </div>`;
+    document.body.appendChild(ov); sheetEl = ov;
+    requestAnimationFrame(() => ov.classList.add("show"));
+    const panel = ov.querySelector(".sheet");
+    ov.addEventListener("pointerdown", (e) => { if (!panel.contains(e.target)) closeSheet(); });
+    ov.querySelector(".sheet-cancel").onclick = closeSheet;
+    ov.querySelector(".act-export").onclick = () => { closeSheet(); exportData(); };
+    ov.querySelector(".act-import").onclick = () => { closeSheet(); importData(); };
+  };
+  const menuBtn = () => { const b = document.createElement("button"); b.className = "iconbtn-lg"; b.title = "データ"; b.innerHTML = svgMore; b.onclick = openDataSheet; return b; };
+
+  // ---------- render ----------
+  const render = () => {
+    el("tabTpl").classList.toggle("active", mode === "template");
+    el("tabToday").classList.toggle("active", mode === "today");
+    if (mode === "template") { if (tplView === "edit") renderTplEdit(); else renderTplList(); }
+    else renderToday();
+    const showFab = mode === "today" || (mode === "template" && tplView === "edit");
+    el("fab").classList.toggle("show", showFab);
+    el("screen").classList.toggle("has-fab", showFab);
+    scheduleSave();
+  };
+
+  document.querySelectorAll(".tabbar button[data-mode]").forEach(b => {
+    b.onclick = () => { mode = b.dataset.mode; if (mode === "template") tplView = "list"; render(); };
+  });
+
+  // theme
+  const themeLabel = el("themeLabel");
+  const setLabel = () => {
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark"
+      || (!document.documentElement.getAttribute("data-theme") && matchMedia("(prefers-color-scheme: dark)").matches);
+    themeLabel.textContent = isDark ? "ライト" : "ダーク";
+  };
+  el("themeBtn").onclick = () => {
+    const cur = document.documentElement.getAttribute("data-theme");
+    const isDark = cur === "dark" || (!cur && matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.setAttribute("data-theme", isDark ? "light" : "dark"); setLabel();
+  };
+  setLabel();
+
+  loadState();          // restore saved data if present (falls back to the seeded sample)
+  render();
+
+  // PWA: register the service worker when hosted (no-op inside the sandboxed preview)
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+  }
+})();
+</script>
