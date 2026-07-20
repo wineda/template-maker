@@ -1,5 +1,5 @@
-/* ひな形タスク — Service Worker (offline cache) */
-const CACHE = "hinagata-tasks-v1";
+/* ひな形タスク — Service Worker */
+const CACHE = "hinagata-tasks-v2";
 const ASSETS = [
   "./",
   "./index.html",
@@ -22,20 +22,36 @@ self.addEventListener("activate", (e) => {
   );
 });
 
-// Cache-first with network fallback; navigations fall back to the cached app shell.
+// Network-first for the app itself (HTML / navigations) so updates show immediately when online;
+// cache-first for static assets (icons, manifest). Falls back to cache when offline.
 self.addEventListener("fetch", (e) => {
   const req = e.request;
   if (req.method !== "GET") return;
+  const url = new URL(req.url);
+  const isDoc = req.mode === "navigate" || req.destination === "document" ||
+    url.pathname.endsWith("/") || url.pathname.endsWith("index.html");
+
+  if (isDoc) {
+    e.respondWith(
+      fetch(req)
+        .then((resp) => {
+          const copy = resp.clone();
+          caches.open(CACHE).then((c) => c.put("./index.html", copy)).catch(() => {});
+          return resp;
+        })
+        .catch(() => caches.match(req).then((c) => c || caches.match("./index.html")))
+    );
+    return;
+  }
+
   e.respondWith(
     caches.match(req).then((cached) => {
       if (cached) return cached;
-      return fetch(req)
-        .then((resp) => {
-          const copy = resp.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
-          return resp;
-        })
-        .catch(() => (req.mode === "navigate" ? caches.match("./index.html") : undefined));
+      return fetch(req).then((resp) => {
+        const copy = resp.clone();
+        caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+        return resp;
+      }).catch(() => undefined);
     })
   );
 });
