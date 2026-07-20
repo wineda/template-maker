@@ -1,0 +1,717 @@
+<title>ツリータスク — 階層タスク整理アプリ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  /* ---------- tokens ---------- */
+  :root {
+    --bg: #f5f6fb;
+    --surface: #ffffff;
+    --surface-2: #eef0f7;
+    --surface-hover: #f3f4fa;
+    --border: #e3e6f0;
+    --border-strong: #d3d7e6;
+    --text: #191c2b;
+    --text-dim: #5f6580;
+    --text-faint: #969cb4;
+    --accent: #4a5bd6;
+    --accent-soft: #eceeffb0;
+    --done: #1f9d55;
+    --done-soft: #e4f5ea;
+    --star: #f0a828;
+    --shadow: 0 1px 2px rgba(20, 24, 48, .04), 0 8px 24px -12px rgba(20, 24, 48, .12);
+    /* depth rails — muted spectrum so nesting depth reads at a glance */
+    --d1: #4a5bd6;
+    --d2: #1f9d8a;
+    --d3: #d98324;
+    --d4: #c0568a;
+    --d5: #7a56c0;
+    --radius: 12px;
+    --radius-sm: 8px;
+    font-synthesis: none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1017;
+      --surface: #161a24;
+      --surface-2: #1d2230;
+      --surface-hover: #212637;
+      --border: #262c3c;
+      --border-strong: #333a4e;
+      --text: #e9ebf5;
+      --text-dim: #9aa1ba;
+      --text-faint: #676e88;
+      --accent: #7f8bff;
+      --accent-soft: #262c50;
+      --done: #46c37b;
+      --done-soft: #163524;
+      --star: #f2b53f;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 30px -14px rgba(0,0,0,.55);
+      --d1: #7f8bff;
+      --d2: #34c3ac;
+      --d3: #e5a04e;
+      --d4: #db7aad;
+      --d5: #a284e0;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #f5f6fb; --surface: #ffffff; --surface-2: #eef0f7; --surface-hover: #f3f4fa;
+    --border: #e3e6f0; --border-strong: #d3d7e6; --text: #191c2b; --text-dim: #5f6580;
+    --text-faint: #969cb4; --accent: #4a5bd6; --accent-soft: #eceeffb0; --done: #1f9d55;
+    --done-soft: #e4f5ea; --star: #f0a828;
+    --shadow: 0 1px 2px rgba(20,24,48,.04), 0 8px 24px -12px rgba(20,24,48,.12);
+    --d1:#4a5bd6; --d2:#1f9d8a; --d3:#d98324; --d4:#c0568a; --d5:#7a56c0;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1017; --surface: #161a24; --surface-2: #1d2230; --surface-hover: #212637;
+    --border: #262c3c; --border-strong: #333a4e; --text: #e9ebf5; --text-dim: #9aa1ba;
+    --text-faint: #676e88; --accent: #7f8bff; --accent-soft: #262c50; --done: #46c37b;
+    --done-soft: #163524; --star: #f2b53f;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 30px -14px rgba(0,0,0,.55);
+    --d1:#7f8bff; --d2:#34c3ac; --d3:#e5a04e; --d4:#db7aad; --d5:#a284e0;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN",
+      "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", "Segoe UI", Meiryo, sans-serif;
+    font-size: 14.5px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  ::selection { background: var(--accent-soft); }
+
+  /* ---------- shell ---------- */
+  .app {
+    display: grid;
+    grid-template-columns: 244px 1fr;
+    height: 100vh;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  /* ---------- sidebar ---------- */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 18px 12px;
+    gap: 4px;
+    overflow-y: auto;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 4px 8px 14px;
+  }
+  .brand .logo {
+    width: 26px; height: 26px; flex: none;
+    display: grid; place-items: center;
+  }
+  .brand .logo svg { width: 26px; height: 26px; }
+  .brand .name { font-weight: 700; font-size: 15px; letter-spacing: .01em; }
+  .brand .name small { display:block; font-weight:500; font-size:10.5px; color: var(--text-faint); letter-spacing:.08em; }
+
+  .nav-label {
+    font-size: 10.5px; font-weight: 600; letter-spacing: .11em;
+    color: var(--text-faint); text-transform: uppercase;
+    padding: 14px 10px 6px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: var(--radius-sm);
+    color: var(--text-dim); background: none; border: none;
+    width: 100%; text-align: left; font-size: 14px; font-weight: 500;
+    transition: background .12s, color .12s;
+  }
+  .nav-item:hover { background: var(--surface-hover); color: var(--text); }
+  .nav-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .nav-item .ico { width: 17px; height: 17px; flex: none; }
+  .nav-item .count {
+    margin-left: auto; font-size: 12px; font-weight: 600;
+    color: var(--text-faint); font-variant-numeric: tabular-nums;
+  }
+  .nav-item.active .count { color: var(--accent); }
+
+  .proj-item .dot { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+  .proj-item .mini {
+    margin-left: auto; font-size: 11px; color: var(--text-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .theme-toggle {
+    margin-top: auto; display: flex; align-items: center; gap: 9px;
+    padding: 9px 10px; border-radius: var(--radius-sm);
+    color: var(--text-dim); background: none; border: 1px solid var(--border);
+    font-size: 13px; font-weight: 500;
+  }
+  .theme-toggle:hover { background: var(--surface-hover); color: var(--text); }
+
+  /* ---------- main ---------- */
+  .main { display: flex; flex-direction: column; overflow: hidden; }
+  .topbar {
+    padding: 22px 30px 16px;
+    display: flex; align-items: flex-start; gap: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar .head { flex: 1; min-width: 0; }
+  .topbar h1 { margin: 0; font-size: 21px; font-weight: 700; letter-spacing: .005em; }
+  .topbar .date { margin: 3px 0 0; color: var(--text-dim); font-size: 13px; }
+
+  .ring { display: flex; align-items: center; gap: 12px; }
+  .ring .pct { text-align: right; }
+  .ring .pct b { font-size: 19px; font-variant-numeric: tabular-nums; }
+  .ring .pct span { display: block; font-size: 11px; color: var(--text-faint); }
+  .ring svg { transform: rotate(-90deg); }
+  .ring .track { stroke: var(--surface-2); }
+  .ring .fill { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset .5s cubic-bezier(.4,0,.2,1); }
+
+  .quickadd {
+    margin: 16px 30px 4px;
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 4px 6px 4px 14px;
+    box-shadow: var(--shadow);
+    transition: border-color .15s;
+  }
+  .quickadd:focus-within { border-color: var(--accent); }
+  .quickadd svg { color: var(--text-faint); flex: none; }
+  .quickadd input {
+    flex: 1; border: none; background: none; outline: none;
+    color: var(--text); font-size: 14.5px; padding: 9px 0; font-family: inherit;
+  }
+  .quickadd input::placeholder { color: var(--text-faint); }
+  .quickadd .go {
+    border: none; background: var(--accent); color: #fff;
+    border-radius: var(--radius-sm); padding: 8px 14px; font-size: 13px; font-weight: 600;
+  }
+  .quickadd .go:hover { filter: brightness(1.06); }
+
+  .scroll { flex: 1; overflow-y: auto; padding: 12px 30px 40px; }
+  .hint {
+    color: var(--text-faint); font-size: 12.5px; padding: 6px 4px 10px;
+    display: flex; gap: 16px; flex-wrap: wrap;
+  }
+  .hint kbd {
+    background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 5px; padding: 1px 6px; font-size: 11px; font-family: inherit;
+  }
+
+  /* ---------- task tree ---------- */
+  .tree { list-style: none; margin: 0; padding: 0; }
+  .node { position: relative; }
+  .row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 3px 8px; border-radius: var(--radius-sm);
+    position: relative;
+    transition: background .1s;
+  }
+  .row:hover { background: var(--surface-hover); }
+  .row .rail {
+    position: absolute; left: 0; top: 4px; bottom: 4px;
+    width: 3px; border-radius: 2px; opacity: .0;
+  }
+
+  .twist {
+    width: 20px; height: 20px; flex: none; border: none; background: none;
+    display: grid; place-items: center; color: var(--text-faint);
+    border-radius: 5px; padding: 0;
+  }
+  .twist:hover { background: var(--surface-2); color: var(--text-dim); }
+  .twist svg { transition: transform .15s; }
+  .node.collapsed > .row .twist svg { transform: rotate(-90deg); }
+  .twist.leaf { visibility: hidden; }
+
+  .check {
+    width: 19px; height: 19px; flex: none; border-radius: 6px;
+    border: 1.8px solid var(--border-strong); background: var(--surface);
+    display: grid; place-items: center; padding: 0; transition: all .13s;
+  }
+  .check:hover { border-color: var(--accent); }
+  .check svg { opacity: 0; transform: scale(.5); transition: all .13s; color: #fff; }
+  .check.partial { border-color: var(--accent); background: var(--surface); }
+  .check.partial::after {
+    content: ""; width: 9px; height: 2.5px; border-radius: 2px; background: var(--accent);
+  }
+  .check.done { background: var(--done); border-color: var(--done); }
+  .check.done svg { opacity: 1; transform: scale(1); }
+
+  .title {
+    flex: 1; min-width: 0; padding: 4px 0; font-size: 14.5px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .row.is-done > .title { color: var(--text-faint); text-decoration: line-through; text-decoration-thickness: 1.5px; }
+  .title[contenteditable="true"] { outline: none; white-space: normal; cursor: text; }
+
+  .badge {
+    font-size: 11px; font-weight: 600; color: var(--text-faint);
+    background: var(--surface-2); border-radius: 20px; padding: 1px 8px;
+    font-variant-numeric: tabular-nums; flex: none;
+  }
+  .badge.full { color: var(--done); background: var(--done-soft); }
+  .pbar {
+    width: 46px; height: 5px; border-radius: 3px; background: var(--surface-2);
+    overflow: hidden; flex: none;
+  }
+  .pbar > i { display: block; height: 100%; background: var(--accent); border-radius: 3px; transition: width .35s; }
+  .pbar.full > i { background: var(--done); }
+
+  .actions { display: flex; gap: 1px; flex: none; opacity: 0; transition: opacity .12s; }
+  .row:hover .actions, .row:focus-within .actions { opacity: 1; }
+  .iconbtn {
+    width: 26px; height: 26px; border: none; background: none; border-radius: 6px;
+    display: grid; place-items: center; color: var(--text-faint); padding: 0;
+  }
+  .iconbtn:hover { background: var(--surface-2); color: var(--text); }
+  .iconbtn.star.on { color: var(--star); opacity: 1; }
+  .row .actions .star.on { opacity: 1; }
+  .node .row .star.on { }
+  .iconbtn.del:hover { color: #e0556b; background: #e0556b1a; }
+
+  .children { list-style: none; margin: 0; padding: 0 0 0 26px; position: relative; }
+  .children::before {
+    content: ""; position: absolute; left: 12px; top: 0; bottom: 6px;
+    width: 1.5px; background: var(--border); border-radius: 2px;
+  }
+  .node.collapsed > .children { display: none; }
+
+  .addsub {
+    display: flex; align-items: center; gap: 7px; margin-left: 27px;
+    padding: 4px 8px; color: var(--text-faint); font-size: 13px;
+    border: none; background: none; border-radius: 6px; opacity: 0; transition: opacity .12s;
+  }
+  .node:hover > .addsub { opacity: 1; }
+  .addsub:hover { color: var(--accent); background: var(--surface-hover); }
+
+  /* flat views (today / done) */
+  .flat { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+  .flatrow {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: var(--radius-sm);
+    background: var(--surface); border: 1px solid var(--border);
+  }
+  .flatrow:hover { border-color: var(--border-strong); }
+  .flatrow .path { font-size: 11.5px; color: var(--text-faint); margin-bottom: 1px; }
+  .flatrow .body { flex: 1; min-width: 0; }
+  .flatrow .t { font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .flatrow.is-done .t { color: var(--text-faint); text-decoration: line-through; }
+
+  .empty { text-align: center; color: var(--text-faint); padding: 60px 20px; }
+  .empty svg { opacity: .5; margin-bottom: 10px; }
+  .empty p { margin: 0; font-size: 14px; }
+
+  @media (max-width: 760px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .topbar, .quickadd, .scroll { padding-left: 16px; padding-right: 16px; }
+    .quickadd { margin-left: 16px; margin-right: 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="logo">
+        <svg viewBox="0 0 24 24" fill="none">
+          <rect x="2.5" y="3" width="9" height="4" rx="1.4" fill="var(--d1)"/>
+          <rect x="7" y="10" width="9.5" height="4" rx="1.4" fill="var(--d2)"/>
+          <rect x="11.5" y="17" width="10" height="4" rx="1.4" fill="var(--d3)"/>
+          <path d="M5 7v3.2a1 1 0 0 0 1 1H7M9.7 14v3.2a1 1 0 0 0 1 1H11.5" stroke="var(--text-faint)" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span class="name">ツリータスク<small>TREE TASKS</small></span>
+    </div>
+
+    <div class="nav-label">ビュー</div>
+    <button class="nav-item" data-view="today">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2l2.4 5 5.5.5-4.2 3.7 1.3 5.4L12 19l-5 2.6 1.3-5.4L4 12.5l5.5-.5z" stroke-linejoin="round"/></svg>
+      今日やる <span class="count" id="c-today">0</span>
+    </button>
+    <button class="nav-item active" data-view="all">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5h6v6H4zM14 5h6v6h-6zM4 15h6v4H4zM14 15h6v4h-6z" stroke-linejoin="round"/></svg>
+      すべてのタスク <span class="count" id="c-all">0</span>
+    </button>
+    <button class="nav-item" data-view="done">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 12l5 5L20 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      完了済み <span class="count" id="c-done">0</span>
+    </button>
+
+    <div class="nav-label">プロジェクト</div>
+    <div id="projlist"></div>
+
+    <button class="theme-toggle" id="themeBtn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.6 6.6 0 0 0 9.8 9.8z" stroke-linejoin="round"/></svg>
+      <span id="themeLabel">ダークモード</span>
+    </button>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="head">
+        <h1 id="viewTitle">すべてのタスク</h1>
+        <p class="date" id="dateLine"></p>
+      </div>
+      <div class="ring">
+        <div class="pct"><b id="ringPct">0%</b><span>今日の完了</span></div>
+        <svg width="52" height="52" viewBox="0 0 52 52">
+          <circle class="track" cx="26" cy="26" r="21" fill="none" stroke-width="6"/>
+          <circle class="fill" id="ringFill" cx="26" cy="26" r="21" fill="none" stroke-width="6"
+            stroke-dasharray="131.9" stroke-dashoffset="131.9"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="quickadd" id="quickadd">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
+      <input id="qinput" type="text" placeholder="タスクを追加…（例：週報を書く）" autocomplete="off" />
+      <button class="go" id="qgo">追加</button>
+    </div>
+
+    <div class="scroll">
+      <div class="hint" id="hint">
+        <span><kbd>クリック</kbd> で完了 / 未完了</span>
+        <span><kbd>+ サブタスク</kbd> で分解</span>
+        <span>タイトルを<kbd>ダブルクリック</kbd>で編集</span>
+      </div>
+      <div id="content"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  let uid = 1;
+  const nid = () => "n" + (uid++);
+  const T = (title, children, opts = {}) => ({
+    id: nid(), title, done: !!opts.done, today: !!opts.today,
+    collapsed: !!opts.collapsed, children: children || []
+  });
+
+  // ---------- realistic daily sample data ----------
+  let data = [
+    T("朝のルーティン", [
+      T("水をコップ1杯飲む", null, { done: true }),
+      T("ストレッチ 5分", null, { done: true }),
+      T("今日のタスクを確認する", null, { today: true }),
+    ]),
+    T("仕事：提案資料をつくる", [
+      T("構成をざっくり決める", null, { done: true }),
+      T("スライドを作成する", [
+        T("表紙・目次", null, { done: true }),
+        T("課題の整理セクション", null, { today: true }),
+        T("提案内容セクション", [
+          T("要点を3つに絞る", null, { today: true }),
+          T("図解を1枚入れる"),
+        ]),
+        T("見積り・スケジュール"),
+      ]),
+      T("上司にレビューを依頼する"),
+    ]),
+    T("勉強：英語", [
+      T("単語を20個おぼえる", null, { today: true }),
+      T("リスニング 15分", null, { today: true }),
+    ], { collapsed: true }),
+    T("暮らし", [
+      T("夕飯の買い物", [
+        T("買うものリストを書く", null, { done: true }),
+        T("スーパーに寄る", null, { today: true }),
+      ]),
+      T("洗濯物をたたむ"),
+    ]),
+  ];
+
+  const projColors = ["var(--d1)","var(--d2)","var(--d3)","var(--d4)","var(--d5)"];
+  let view = "all";
+
+  // ---------- tree helpers ----------
+  const walk = (nodes, fn, parent = null, path = []) => {
+    for (const n of nodes) {
+      fn(n, parent, path);
+      if (n.children.length) walk(n.children, fn, n, [...path, n]);
+    }
+  };
+  const leaves = (n) => n.children.length ? n.children.flatMap(leaves) : [n];
+  const isLeaf = (n) => n.children.length === 0;
+  const doneCount = (n) => leaves(n).filter(l => l.done).length;
+  const leafCount = (n) => leaves(n).length;
+  const nodeDone = (n) => isLeaf(n) ? n.done : leaves(n).every(l => l.done);
+  const setSubtree = (n, val) => { if (isLeaf(n)) n.done = val; else n.children.forEach(c => setSubtree(c, val)); };
+  const findParent = (id, nodes = data, parent = null) => {
+    for (const n of nodes) {
+      if (n.id === id) return parent;
+      const r = findParent(id, n.children, n);
+      if (r !== undefined) return r;
+    }
+    return undefined;
+  };
+  const findNode = (id, nodes = data) => {
+    for (const n of nodes) {
+      if (n.id === id) return n;
+      const r = findNode(id, n.children);
+      if (r) return r;
+    }
+    return null;
+  };
+
+  // ---------- counts ----------
+  const refreshCounts = () => {
+    let today = 0, all = 0, done = 0;
+    walk(data, (n) => { if (isLeaf(n)) { all++; if (n.done) done++; if (n.today && !n.done) today++; } });
+    document.getElementById("c-today").textContent = today;
+    document.getElementById("c-all").textContent = all;
+    document.getElementById("c-done").textContent = done;
+
+    // today's progress ring: leaves marked today
+    const todayLeaves = []; walk(data, (n) => { if (isLeaf(n) && n.today) todayLeaves.push(n); });
+    const td = todayLeaves.filter(l => l.done).length;
+    const pct = todayLeaves.length ? Math.round(td / todayLeaves.length * 100) : 0;
+    document.getElementById("ringPct").textContent = pct + "%";
+    const C = 2 * Math.PI * 21;
+    document.getElementById("ringFill").style.strokeDashoffset = C * (1 - pct / 100);
+
+    // project list
+    const pl = document.getElementById("projlist"); pl.innerHTML = "";
+    data.forEach((p, i) => {
+      const b = document.createElement("button");
+      b.className = "nav-item proj-item";
+      b.innerHTML = `<span class="dot" style="background:${projColors[i % projColors.length]}"></span>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.title)}</span>
+        <span class="mini">${doneCount(p)}/${leafCount(p)}</span>`;
+      b.onclick = () => { view = "all"; syncNav(); render(); const el = document.querySelector(`[data-nid="${p.id}"]`); el && el.scrollIntoView({ behavior: "smooth", block: "center" }); };
+      pl.appendChild(b);
+    });
+  };
+
+  const esc = (s) => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  // ---------- render tree ----------
+  const CHECK = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2"><path d="M4 12l5 5L20 6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const TWIST = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M8 5l8 7-8 7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+  const renderNode = (n, depth) => {
+    const li = document.createElement("li");
+    li.className = "node" + (n.collapsed ? " collapsed" : "");
+    li.dataset.nid = n.id;
+    const leaf = isLeaf(n);
+    const done = nodeDone(n);
+    const dc = doneCount(n), lc = leafCount(n);
+    const railColor = `var(--d${Math.min(depth, 5)})`;
+
+    const row = document.createElement("div");
+    row.className = "row" + (done ? " is-done" : "");
+
+    // twisty
+    const tw = document.createElement("button");
+    tw.className = "twist" + (leaf ? " leaf" : "");
+    tw.innerHTML = TWIST;
+    tw.onclick = (e) => { e.stopPropagation(); n.collapsed = !n.collapsed; render(); };
+    row.appendChild(tw);
+
+    // checkbox
+    const cb = document.createElement("button");
+    cb.className = "check" + (done ? " done" : (!leaf && dc > 0 ? " partial" : ""));
+    cb.innerHTML = CHECK;
+    cb.title = done ? "未完了に戻す" : "完了にする";
+    cb.onclick = (e) => { e.stopPropagation(); setSubtree(n, !done); render(); };
+    row.appendChild(cb);
+
+    // title
+    const tt = document.createElement("div");
+    tt.className = "title";
+    tt.textContent = n.title;
+    tt.ondblclick = () => startEdit(tt, n);
+    row.appendChild(tt);
+
+    // progress for parents
+    if (!leaf) {
+      const full = dc === lc;
+      const badge = document.createElement("span");
+      badge.className = "badge" + (full ? " full" : "");
+      badge.textContent = `${dc}/${lc}`;
+      const bar = document.createElement("span");
+      bar.className = "pbar" + (full ? " full" : "");
+      bar.innerHTML = `<i style="width:${lc ? (dc / lc * 100) : 0}%"></i>`;
+      row.appendChild(bar);
+      row.appendChild(badge);
+    }
+
+    // actions
+    const act = document.createElement("div");
+    act.className = "actions";
+    const star = document.createElement("button");
+    star.className = "iconbtn star" + (n.today ? " on" : "");
+    star.title = n.today ? "「今日やる」から外す" : "「今日やる」に追加";
+    star.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="${n.today ? "currentColor" : "none"}" stroke="currentColor" stroke-width="1.6"><path d="M12 3l2.5 5.2 5.7.5-4.3 3.8 1.3 5.6L12 20.4 6.8 18l1.3-5.6L3.8 8.7l5.7-.5z" stroke-linejoin="round"/></svg>`;
+    star.onclick = (e) => { e.stopPropagation(); if (isLeaf(n)) { n.today = !n.today; } else { const val = !n.today; n.today = val; leaves(n).forEach(l => l.today = val); } render(); };
+    const add = document.createElement("button");
+    add.className = "iconbtn";
+    add.title = "サブタスクを追加";
+    add.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6v12M6 12h12" stroke-linecap="round"/></svg>`;
+    add.onclick = (e) => { e.stopPropagation(); addChild(n); };
+    const del = document.createElement("button");
+    del.className = "iconbtn del";
+    del.title = "削除";
+    del.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 7h14M9 7V5h6v2M6 7l1 12h10l1-12" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    del.onclick = (e) => { e.stopPropagation(); removeNode(n.id); };
+    act.append(star, add, del);
+    row.appendChild(act);
+
+    li.appendChild(row);
+
+    // children
+    if (!leaf) {
+      const ul = document.createElement("ul");
+      ul.className = "children";
+      n.children.forEach(c => ul.appendChild(renderNode(c, depth + 1)));
+      li.appendChild(ul);
+      const as = document.createElement("button");
+      as.className = "addsub";
+      as.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6v12M6 12h12" stroke-linecap="round"/></svg> サブタスクを追加`;
+      as.onclick = (e) => { e.stopPropagation(); addChild(n); };
+      li.appendChild(as);
+    }
+    return li;
+  };
+
+  const startEdit = (el, n) => {
+    el.contentEditable = "true"; el.focus();
+    const r = document.createRange(); r.selectNodeContents(el);
+    const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    const finish = () => {
+      el.contentEditable = "false";
+      const v = el.textContent.trim();
+      if (v) n.title = v; else el.textContent = n.title;
+      render();
+    };
+    el.onblur = finish;
+    el.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); el.blur(); } if (e.key === "Escape") { el.textContent = n.title; el.blur(); } };
+  };
+
+  const addChild = (n) => {
+    n.collapsed = false;
+    const child = T("新しいサブタスク");
+    n.children.push(child);
+    render();
+    requestAnimationFrame(() => {
+      const el = document.querySelector(`[data-nid="${child.id}"] > .row > .title`);
+      if (el) startEdit(el, child);
+    });
+  };
+
+  const removeNode = (id) => {
+    const rm = (nodes) => {
+      const i = nodes.findIndex(x => x.id === id);
+      if (i >= 0) { nodes.splice(i, 1); return true; }
+      return nodes.some(x => rm(x.children));
+    };
+    rm(data); render();
+  };
+
+  const addTop = (title) => {
+    data.push(T(title));
+    render();
+  };
+
+  // ---------- flat views ----------
+  const pathStr = (path) => path.map(p => p.title).join(" › ");
+  const renderFlat = (filterFn, emptyMsg) => {
+    const items = [];
+    walk(data, (n, parent, path) => { if (isLeaf(n) && filterFn(n)) items.push({ n, path }); });
+    if (!items.length) {
+      return `<div class="empty">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 7h16M4 12h16M4 17h10" stroke-linecap="round"/></svg>
+        <p>${emptyMsg}</p></div>`;
+    }
+    const ul = document.createElement("ul"); ul.className = "flat";
+    items.forEach(({ n, path }) => {
+      const li = document.createElement("li");
+      li.className = "flatrow" + (n.done ? " is-done" : "");
+      const cb = document.createElement("button");
+      cb.className = "check" + (n.done ? " done" : "");
+      cb.innerHTML = CHECK;
+      cb.onclick = () => { n.done = !n.done; render(); };
+      const body = document.createElement("div"); body.className = "body";
+      body.innerHTML = `${path.length ? `<div class="path">${esc(pathStr(path))}</div>` : ""}<div class="t">${esc(n.title)}</div>`;
+      const star = document.createElement("button");
+      star.className = "iconbtn star" + (n.today ? " on" : "");
+      star.style.opacity = 1;
+      star.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="${n.today ? "currentColor" : "none"}" stroke="currentColor" stroke-width="1.6"><path d="M12 3l2.5 5.2 5.7.5-4.3 3.8 1.3 5.6L12 20.4 6.8 18l1.3-5.6L3.8 8.7l5.7-.5z" stroke-linejoin="round"/></svg>`;
+      star.onclick = () => { n.today = !n.today; render(); };
+      li.append(cb, body, star);
+      ul.appendChild(li);
+    });
+    const wrap = document.createElement("div"); wrap.appendChild(ul);
+    return wrap.innerHTML;
+  };
+
+  // ---------- main render ----------
+  const titles = { all: "すべてのタスク", today: "今日やる", done: "完了済み" };
+  const render = () => {
+    refreshCounts();
+    document.getElementById("viewTitle").textContent = titles[view];
+    const content = document.getElementById("content");
+    const hint = document.getElementById("hint");
+    hint.style.display = view === "all" ? "flex" : "none";
+    content.innerHTML = "";
+
+    if (view === "all") {
+      const ul = document.createElement("ul"); ul.className = "tree";
+      data.forEach(n => ul.appendChild(renderNode(n, 1)));
+      content.appendChild(ul);
+      if (!data.length) content.innerHTML = `<div class="empty"><p>タスクがありません。上の入力欄から追加してみましょう。</p></div>`;
+    } else if (view === "today") {
+      content.innerHTML = renderFlat(n => n.today, "「今日やる」タスクはありません。<br>星アイコンで今日の予定に追加できます。");
+    } else {
+      content.innerHTML = renderFlat(n => n.done, "完了したタスクはまだありません。");
+    }
+  };
+
+  // ---------- nav ----------
+  const syncNav = () => {
+    document.querySelectorAll(".nav-item[data-view]").forEach(b =>
+      b.classList.toggle("active", b.dataset.view === view));
+  };
+  document.querySelectorAll(".nav-item[data-view]").forEach(b => {
+    b.onclick = () => { view = b.dataset.view; syncNav(); render(); };
+  });
+
+  // ---------- quick add ----------
+  const qinput = document.getElementById("qinput");
+  const submit = () => { const v = qinput.value.trim(); if (v) { if (view !== "all") { view = "all"; syncNav(); } addTop(v); qinput.value = ""; } };
+  document.getElementById("qgo").onclick = submit;
+  qinput.addEventListener("keydown", (e) => { if (e.key === "Enter") submit(); });
+
+  // ---------- theme ----------
+  const themeBtn = document.getElementById("themeBtn");
+  const themeLabel = document.getElementById("themeLabel");
+  const applyThemeLabel = () => {
+    const isDark = document.documentElement.getAttribute("data-theme") === "dark"
+      || (!document.documentElement.getAttribute("data-theme") && matchMedia("(prefers-color-scheme: dark)").matches);
+    themeLabel.textContent = isDark ? "ライトモード" : "ダークモード";
+  };
+  themeBtn.onclick = () => {
+    const cur = document.documentElement.getAttribute("data-theme");
+    const isDark = cur === "dark" || (!cur && matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.setAttribute("data-theme", isDark ? "light" : "dark");
+    applyThemeLabel();
+  };
+  applyThemeLabel();
+
+  // ---------- date ----------
+  const dl = document.getElementById("dateLine");
+  const now = new Date(2026, 6, 20);
+  const wd = ["日","月","火","水","木","金","土"][now.getDay()];
+  dl.textContent = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日（${wd}）`;
+
+  render();
+})();
+</script>
