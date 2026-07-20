@@ -1,237 +1,212 @@
 <title>ひな形タスク — テンプレートでつくる毎日のタスク</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <style>
   :root {
-    --bg: #f5f6fb;
-    --surface: #ffffff;
-    --surface-2: #eef0f7;
-    --surface-hover: #f3f4fa;
-    --border: #e3e6f0;
-    --border-strong: #d3d7e6;
-    --text: #191c2b;
-    --text-dim: #5f6580;
-    --text-faint: #969cb4;
-    --accent: #4a5bd6;
-    --accent-soft: #eceeffb0;
-    --done: #1f9d55;
-    --done-soft: #e4f5ea;
-    --shadow: 0 1px 2px rgba(20,24,48,.04), 0 8px 24px -12px rgba(20,24,48,.12);
+    --bg:#f4f5fa; --surface:#ffffff; --surface-2:#eef0f7; --surface-hover:#f2f3fa;
+    --border:#e5e7f0; --border-strong:#d3d7e6; --text:#191c2b; --text-dim:#5f6580; --text-faint:#969cb4;
+    --accent:#4a5bd6; --accent-soft:#eceeff; --done:#1f9d55; --done-soft:#e4f5ea;
+    --shadow:0 1px 2px rgba(20,24,48,.05), 0 10px 24px -14px rgba(20,24,48,.14);
     --d1:#4a5bd6; --d2:#1f9d8a; --d3:#d98324; --d4:#c0568a; --d5:#7a56c0;
-    --radius: 12px; --radius-sm: 8px;
-    font-synthesis: none;
+    --radius:14px; --radius-sm:10px;
+    --safe-b: env(safe-area-inset-bottom, 0px);
+    font-synthesis:none;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg:#0e1017; --surface:#161a24; --surface-2:#1d2230; --surface-hover:#212637;
-      --border:#262c3c; --border-strong:#333a4e; --text:#e9ebf5; --text-dim:#9aa1ba;
-      --text-faint:#676e88; --accent:#7f8bff; --accent-soft:#262c50; --done:#46c37b;
-      --done-soft:#163524;
-      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 30px -14px rgba(0,0,0,.55);
+      --bg:#0d0f16; --surface:#161a24; --surface-2:#1e2331; --surface-hover:#222738;
+      --border:#282e3e; --border-strong:#353c50; --text:#e9ebf5; --text-dim:#9aa1ba;
+      --text-faint:#6b7288; --accent:#7f8bff; --accent-soft:#232a4c; --done:#46c37b; --done-soft:#163524;
+      --shadow:0 1px 2px rgba(0,0,0,.35), 0 14px 30px -16px rgba(0,0,0,.6);
       --d1:#7f8bff; --d2:#34c3ac; --d3:#e5a04e; --d4:#db7aad; --d5:#a284e0;
     }
   }
-  :root[data-theme="light"]{ --bg:#f5f6fb;--surface:#fff;--surface-2:#eef0f7;--surface-hover:#f3f4fa;--border:#e3e6f0;--border-strong:#d3d7e6;--text:#191c2b;--text-dim:#5f6580;--text-faint:#969cb4;--accent:#4a5bd6;--accent-soft:#eceeffb0;--done:#1f9d55;--done-soft:#e4f5ea;--shadow:0 1px 2px rgba(20,24,48,.04),0 8px 24px -12px rgba(20,24,48,.12);--d1:#4a5bd6;--d2:#1f9d8a;--d3:#d98324;--d4:#c0568a;--d5:#7a56c0;}
-  :root[data-theme="dark"]{ --bg:#0e1017;--surface:#161a24;--surface-2:#1d2230;--surface-hover:#212637;--border:#262c3c;--border-strong:#333a4e;--text:#e9ebf5;--text-dim:#9aa1ba;--text-faint:#676e88;--accent:#7f8bff;--accent-soft:#262c50;--done:#46c37b;--done-soft:#163524;--shadow:0 1px 2px rgba(0,0,0,.3),0 12px 30px -14px rgba(0,0,0,.55);--d1:#7f8bff;--d2:#34c3ac;--d3:#e5a04e;--d4:#db7aad;--d5:#a284e0;}
+  :root[data-theme="light"]{ --bg:#f4f5fa;--surface:#fff;--surface-2:#eef0f7;--surface-hover:#f2f3fa;--border:#e5e7f0;--border-strong:#d3d7e6;--text:#191c2b;--text-dim:#5f6580;--text-faint:#969cb4;--accent:#4a5bd6;--accent-soft:#eceeff;--done:#1f9d55;--done-soft:#e4f5ea;--shadow:0 1px 2px rgba(20,24,48,.05),0 10px 24px -14px rgba(20,24,48,.14);--d1:#4a5bd6;--d2:#1f9d8a;--d3:#d98324;--d4:#c0568a;--d5:#7a56c0;}
+  :root[data-theme="dark"]{ --bg:#0d0f16;--surface:#161a24;--surface-2:#1e2331;--surface-hover:#222738;--border:#282e3e;--border-strong:#353c50;--text:#e9ebf5;--text-dim:#9aa1ba;--text-faint:#6b7288;--accent:#7f8bff;--accent-soft:#232a4c;--done:#46c37b;--done-soft:#163524;--shadow:0 1px 2px rgba(0,0,0,.35),0 14px 30px -16px rgba(0,0,0,.6);--d1:#7f8bff;--d2:#34c3ac;--d3:#e5a04e;--d4:#db7aad;--d5:#a284e0;}
 
-  * { box-sizing: border-box; }
-  html, body { height: 100%; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; }
   body {
-    margin: 0; background: var(--bg); color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN",
-      "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", "Segoe UI", Meiryo, sans-serif;
-    font-size: 14.5px; line-height: 1.5; -webkit-font-smoothing: antialiased;
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic UI","Segoe UI", Meiryo, sans-serif;
+    font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
   }
-  button { font-family: inherit; cursor: pointer; }
-  ::selection { background: var(--accent-soft); }
+  button { font-family:inherit; cursor:pointer; color:inherit; }
+  input { font-family:inherit; }
+  ::selection { background:var(--accent-soft); }
 
-  .app { display: grid; grid-template-columns: 256px 1fr; height: 100vh; max-width: 1200px; margin: 0 auto; }
+  /* phone-shaped app column, centered on desktop */
+  .app {
+    display:flex; flex-direction:column;
+    height:100dvh; max-width:520px; margin:0 auto;
+    background:var(--bg); position:relative;
+    box-shadow:0 0 0 1px var(--border);
+  }
+  @media (min-width:522px){ .app { height:100dvh; } }
 
-  /* sidebar */
-  .sidebar { background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 18px 12px; overflow-y: auto; }
-  .brand { display: flex; align-items: center; gap: 9px; padding: 4px 8px 14px; }
-  .brand .logo svg { width: 26px; height: 26px; }
-  .brand .name { font-weight: 700; font-size: 15px; }
-  .brand .name small { display: block; font-weight: 500; font-size: 10.5px; color: var(--text-faint); letter-spacing: .08em; }
+  /* ---- appbar ---- */
+  .appbar {
+    flex:none; display:flex; align-items:center; gap:6px;
+    padding:12px 12px; min-height:56px;
+    background:var(--surface); border-bottom:1px solid var(--border);
+  }
+  .appbar .slot { flex:none; display:flex; }
+  .appbar .titlewrap { flex:1; min-width:0; }
+  .appbar .eyebrow { font-size:10.5px; font-weight:700; letter-spacing:.09em; color:var(--accent); text-transform:uppercase; }
+  .appbar h1 { margin:1px 0 0; font-size:18px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:flex; align-items:center; gap:8px; }
+  .appbar h1 .em { font-size:19px; flex:none; }
+  .appbar h1 [contenteditable="true"]{ outline:none; border-bottom:2px solid var(--accent); }
+  .iconbtn-lg { width:40px; height:40px; border:none; background:none; border-radius:11px; display:grid; place-items:center; color:var(--text-dim); flex:none; }
+  .iconbtn-lg:active { background:var(--surface-2); }
+  .iconbtn-lg svg { width:22px; height:22px; }
+  .iconbtn-lg.danger:active { color:#e0556b; background:#e0556b1a; }
 
-  .modeswitch { display: flex; gap: 4px; background: var(--surface-2); padding: 4px; border-radius: 10px; margin-bottom: 6px; }
-  .modeswitch button { flex: 1; border: none; background: none; color: var(--text-dim); font-size: 12.5px; font-weight: 600; padding: 8px 4px; border-radius: 7px; display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; transition: all .13s; }
-  .modeswitch button svg { width: 15px; height: 15px; }
-  .modeswitch button.active { background: var(--surface); color: var(--accent); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .ring { display:flex; align-items:center; gap:9px; flex:none; }
+  .ring .pct b { font-size:15px; font-variant-numeric:tabular-nums; }
+  .ring svg { transform:rotate(-90deg); display:block; }
+  .ring .track { stroke:var(--surface-2); }
+  .ring .fill { stroke:var(--accent); stroke-linecap:round; transition:stroke-dashoffset .5s cubic-bezier(.4,0,.2,1); }
 
-  .nav-label { font-size: 10.5px; font-weight: 600; letter-spacing: .11em; color: var(--text-faint); text-transform: uppercase; padding: 16px 10px 6px; display: flex; justify-content: space-between; align-items: center; }
-  .side-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: var(--radius-sm); color: var(--text-dim); background: none; border: none; width: 100%; text-align: left; font-size: 14px; font-weight: 500; transition: background .12s, color .12s; }
-  .side-item:hover { background: var(--surface-hover); color: var(--text); }
-  .side-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
-  .side-item .emoji { font-size: 16px; flex: none; width: 20px; text-align: center; }
-  .side-item .label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .side-item .meta { font-size: 11.5px; color: var(--text-faint); font-variant-numeric: tabular-nums; flex: none; }
-  .side-item .plus { flex: none; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 6px; color: var(--accent); background: var(--accent-soft); }
-  .side-item.applyable:hover .plus { background: var(--accent); color: #fff; }
+  /* ---- subbar (quick add / apply chips) ---- */
+  .subbar { flex:none; background:var(--surface); border-bottom:1px solid var(--border); }
+  .quickadd { display:flex; align-items:center; gap:8px; padding:10px 12px; }
+  .quickadd .box { flex:1; display:flex; align-items:center; gap:8px; background:var(--surface-2); border:1.5px solid transparent; border-radius:12px; padding:0 6px 0 12px; transition:border-color .15s, background .15s; }
+  .quickadd .box:focus-within { border-color:var(--accent); background:var(--surface); }
+  .quickadd svg { color:var(--text-faint); flex:none; }
+  .quickadd input { flex:1; border:none; background:none; outline:none; color:var(--text); font-size:15px; padding:11px 0; min-width:0; }
+  .quickadd input::placeholder { color:var(--text-faint); }
+  .quickadd .go { border:none; background:var(--accent); color:#fff; border-radius:9px; padding:0 15px; height:38px; font-size:14px; font-weight:600; flex:none; }
+  .quickadd .go:active { filter:brightness(.94); }
 
-  .newbtn { display: flex; align-items: center; gap: 8px; justify-content: center; margin-top: 8px; padding: 9px; border-radius: var(--radius-sm); border: 1px dashed var(--border-strong); background: none; color: var(--text-dim); font-size: 13px; font-weight: 600; width: 100%; }
-  .newbtn:hover { border-color: var(--accent); color: var(--accent); }
+  .chiprow { display:flex; gap:8px; overflow-x:auto; padding:10px 12px; scrollbar-width:none; }
+  .chiprow::-webkit-scrollbar { display:none; }
+  .chip { flex:none; display:inline-flex; align-items:center; gap:7px; background:var(--surface-2); border:1px solid var(--border); border-radius:20px; padding:7px 12px 7px 11px; font-size:13.5px; font-weight:600; color:var(--text); }
+  .chip:active { background:var(--accent-soft); border-color:var(--accent); }
+  .chip .em { font-size:15px; }
+  .chip .p { color:var(--accent); display:grid; place-items:center; }
+  .chip .p svg { width:15px; height:15px; }
+  .chiprow .lbl { flex:none; align-self:center; font-size:11px; font-weight:700; letter-spacing:.06em; color:var(--text-faint); padding-right:2px; }
 
-  .theme-toggle { margin-top: auto; display: flex; align-items: center; gap: 9px; padding: 9px 10px; border-radius: var(--radius-sm); color: var(--text-dim); background: none; border: 1px solid var(--border); font-size: 13px; font-weight: 500; }
-  .theme-toggle:hover { background: var(--surface-hover); color: var(--text); }
+  /* ---- screen ---- */
+  .screen { flex:1; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; padding:14px 12px calc(20px + var(--safe-b)); }
 
-  /* main */
-  .main { display: flex; flex-direction: column; overflow: hidden; }
-  .topbar { padding: 22px 30px 18px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid var(--border); }
-  .topbar .thead { flex: 1; min-width: 0; }
-  .topbar .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 3px; }
-  .topbar h1 { margin: 0; font-size: 21px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-  .topbar h1 .emoji { font-size: 22px; }
-  .topbar h1 [contenteditable="true"] { outline: none; border-bottom: 2px solid var(--accent); }
-  .topbar .sub { margin: 4px 0 0; color: var(--text-dim); font-size: 13px; }
-  .btn { border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); border-radius: var(--radius-sm); padding: 9px 14px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 7px; }
-  .btn:hover { background: var(--surface-hover); }
-  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .btn.primary:hover { filter: brightness(1.07); }
-  .btn.ghost { border-color: transparent; color: var(--text-faint); padding: 9px 10px; }
-  .btn.ghost:hover { color: #e0556b; background: #e0556b1a; }
-  .btn svg { width: 16px; height: 16px; }
+  /* template cards (list) */
+  .tplcard { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:12px; overflow:hidden; }
+  .tplcard .body { display:flex; align-items:center; gap:12px; padding:15px 14px; }
+  .tplcard .em { font-size:26px; flex:none; width:44px; height:44px; display:grid; place-items:center; background:var(--surface-2); border-radius:12px; }
+  .tplcard .tx { flex:1; min-width:0; }
+  .tplcard .tx b { display:block; font-size:16px; font-weight:700; }
+  .tplcard .tx span { display:block; font-size:12.5px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px; }
+  .tplcard .chev { color:var(--text-faint); flex:none; }
+  .tplcard .foot { display:flex; border-top:1px solid var(--border); }
+  .tplcard .foot button { flex:1; border:none; background:none; padding:12px; font-size:13.5px; font-weight:600; color:var(--accent); display:flex; align-items:center; justify-content:center; gap:7px; }
+  .tplcard .foot button:active { background:var(--accent-soft); }
+  .tplcard .foot button svg { width:16px; height:16px; }
+  .tplcard .foot .cnt { color:var(--text-faint); font-weight:600; font-variant-numeric:tabular-nums; }
+  .newcard svg { width:16px; height:16px; }
+  .bigbtn svg { width:18px; height:18px; }
 
-  .ring { display: flex; align-items: center; gap: 12px; }
-  .ring .pct { text-align: right; }
-  .ring .pct b { font-size: 19px; font-variant-numeric: tabular-nums; }
-  .ring .pct span { display: block; font-size: 11px; color: var(--text-faint); }
-  .ring svg { transform: rotate(-90deg); }
-  .ring .track { stroke: var(--surface-2); }
-  .ring .fill { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset .5s cubic-bezier(.4,0,.2,1); }
-
-  .quickadd { margin: 16px 30px 4px; display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px 6px 4px 14px; box-shadow: var(--shadow); transition: border-color .15s; }
-  .quickadd:focus-within { border-color: var(--accent); }
-  .quickadd svg { color: var(--text-faint); flex: none; }
-  .quickadd input { flex: 1; border: none; background: none; outline: none; color: var(--text); font-size: 14.5px; padding: 9px 0; font-family: inherit; }
-  .quickadd input::placeholder { color: var(--text-faint); }
-  .quickadd .go { border: none; background: var(--accent); color: #fff; border-radius: var(--radius-sm); padding: 8px 14px; font-size: 13px; font-weight: 600; }
-  .quickadd .go:hover { filter: brightness(1.06); }
-
-  .scroll { flex: 1; overflow-y: auto; padding: 14px 30px 48px; }
-  .hint { color: var(--text-faint); font-size: 12.5px; padding: 4px 4px 12px; display: flex; gap: 16px; flex-wrap: wrap; }
-  .hint kbd { background: var(--surface-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; font-size: 11px; font-family: inherit; }
-
-  /* tree */
-  .tree { list-style: none; margin: 0; padding: 0; }
-  .node { position: relative; }
-  .row { display: flex; align-items: center; gap: 8px; padding: 3px 8px; border-radius: var(--radius-sm); transition: background .1s; }
-  .row:hover { background: var(--surface-hover); }
-
-  .twist { width: 20px; height: 20px; flex: none; border: none; background: none; display: grid; place-items: center; color: var(--text-faint); border-radius: 5px; padding: 0; }
-  .twist:hover { background: var(--surface-2); color: var(--text-dim); }
-  .twist svg { transition: transform .15s; }
-  .node.collapsed > .row .twist svg { transform: rotate(-90deg); }
-  .twist.leaf { visibility: hidden; }
-
-  .check { width: 19px; height: 19px; flex: none; border-radius: 6px; border: 1.8px solid var(--border-strong); background: var(--surface); display: grid; place-items: center; padding: 0; transition: all .13s; position: relative; }
-  .check:hover { border-color: var(--accent); }
-  .check svg { opacity: 0; transform: scale(.5); transition: all .13s; color: #fff; }
-  .check.partial { border-color: var(--accent); }
-  .check.partial::after { content: ""; width: 9px; height: 2.5px; border-radius: 2px; background: var(--accent); }
-  .check.done { background: var(--done); border-color: var(--done); }
-  .check.done svg { opacity: 1; transform: scale(1); }
-
-  .tmark { width: 19px; height: 19px; flex: none; display: grid; place-items: center; }
-  .tmark i { width: 9px; height: 9px; border-radius: 3px; box-sizing: border-box; }
-  .tmark i.parent { background: var(--railc); }
-  .tmark i.leaf { border: 2px solid var(--railc); }
-
-  .title { flex: 1; min-width: 0; padding: 4px 0; font-size: 14.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .row.is-done > .title { color: var(--text-faint); text-decoration: line-through; text-decoration-thickness: 1.5px; }
-  .title[contenteditable="true"] { outline: none; white-space: normal; cursor: text; overflow: visible; }
-
-  .badge { font-size: 11px; font-weight: 600; color: var(--text-faint); background: var(--surface-2); border-radius: 20px; padding: 1px 8px; font-variant-numeric: tabular-nums; flex: none; }
-  .badge.full { color: var(--done); background: var(--done-soft); }
-  .pbar { width: 46px; height: 5px; border-radius: 3px; background: var(--surface-2); overflow: hidden; flex: none; }
-  .pbar > i { display: block; height: 100%; background: var(--accent); border-radius: 3px; transition: width .35s; }
-  .pbar.full > i { background: var(--done); }
-
-  .actions { display: flex; gap: 1px; flex: none; opacity: 0; transition: opacity .12s; }
-  .row:hover .actions, .row:focus-within .actions { opacity: 1; }
-  .iconbtn { width: 26px; height: 26px; border: none; background: none; border-radius: 6px; display: grid; place-items: center; color: var(--text-faint); padding: 0; }
-  .iconbtn:hover { background: var(--surface-2); color: var(--text); }
-  .iconbtn.del:hover { color: #e0556b; background: #e0556b1a; }
-
-  .children { list-style: none; margin: 0; padding: 0 0 0 26px; position: relative; }
-  .children::before { content: ""; position: absolute; left: 12px; top: 0; bottom: 6px; width: 1.5px; background: var(--border); border-radius: 2px; }
-  .node.collapsed > .children { display: none; }
-  .addsub { display: flex; align-items: center; gap: 7px; margin-left: 27px; padding: 4px 8px; color: var(--text-faint); font-size: 13px; border: none; background: none; border-radius: 6px; opacity: 0; transition: opacity .12s; }
-  .node:hover > .addsub { opacity: 1; }
-  .addsub:hover { color: var(--accent); background: var(--surface-hover); }
+  .newcard { display:flex; align-items:center; justify-content:center; gap:9px; width:100%; padding:16px; border:1.5px dashed var(--border-strong); border-radius:var(--radius); background:none; color:var(--text-dim); font-size:14.5px; font-weight:600; }
+  .newcard:active { border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
 
   /* today groups */
-  .group { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 14px; }
-  .group-head { display: flex; align-items: center; gap: 11px; padding: 13px 14px 13px 16px; border-bottom: 1px solid var(--border); }
-  .group-head .emoji { font-size: 18px; }
-  .group-head .gname { font-weight: 700; font-size: 15px; flex: 1; }
-  .group-head .from { font-size: 11px; color: var(--text-faint); font-weight: 500; }
-  .group-body { padding: 8px 12px 12px; }
-  .group.done-all .group-head { background: var(--done-soft); }
+  .group { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:12px; }
+  .group-head { display:flex; align-items:center; gap:10px; padding:12px 12px 12px 14px; border-bottom:1px solid var(--border); }
+  .group-head .em { font-size:17px; }
+  .group-head .gname { font-weight:700; font-size:15px; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .group.done-all .group-head { background:var(--done-soft); }
+  .group-body { padding:6px 8px 8px; }
 
-  /* editor card */
-  .editcard { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 12px 14px 14px; }
+  .editcard { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:8px; margin-bottom:14px; }
+  .edmeta { padding:12px 8px 6px; }
+  .edmeta .desc { color:var(--text-dim); font-size:13px; }
+  .edmeta .steps { color:var(--text-faint); font-size:12.5px; margin-top:2px; }
 
-  .empty { text-align: center; color: var(--text-faint); padding: 54px 20px; }
-  .empty svg { opacity: .5; margin-bottom: 12px; }
-  .empty p { margin: 0 0 4px; font-size: 14px; }
-  .empty .s { font-size: 12.5px; }
+  .bigbtn { display:flex; align-items:center; justify-content:center; gap:9px; width:100%; padding:14px; border-radius:12px; border:none; font-size:15px; font-weight:700; }
+  .bigbtn.primary { background:var(--accent); color:#fff; box-shadow:var(--shadow); }
+  .bigbtn.primary:active { filter:brightness(.95); }
+  .textbtn { display:block; width:100%; text-align:center; padding:14px; margin-top:6px; background:none; border:none; color:var(--text-faint); font-size:13.5px; font-weight:600; }
+  .textbtn:active { color:#e0556b; }
 
-  @media (max-width: 780px) {
-    .app { grid-template-columns: 1fr; }
-    .sidebar { display: none; }
-    .topbar, .scroll { padding-left: 16px; padding-right: 16px; }
-    .quickadd { margin-left: 16px; margin-right: 16px; }
-  }
-  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  /* tree */
+  .tree { list-style:none; margin:0; padding:0; }
+  .node { position:relative; }
+  .row { display:flex; align-items:center; gap:6px; padding:5px 6px; border-radius:10px; min-height:44px; }
+  .row:active { background:var(--surface-hover); }
+
+  .twist { width:32px; height:40px; flex:none; border:none; background:none; display:grid; place-items:center; color:var(--text-faint); padding:0; }
+  .twist svg { transition:transform .15s; width:14px; height:14px; }
+  .node.collapsed > .row .twist svg { transform:rotate(-90deg); }
+  .twist.leaf { visibility:hidden; width:14px; }
+
+  .check { width:26px; height:26px; flex:none; border-radius:8px; border:2px solid var(--border-strong); background:var(--surface); display:grid; place-items:center; padding:0; transition:all .13s; }
+  .check:active { transform:scale(.92); }
+  .check svg { opacity:0; transform:scale(.5); transition:all .13s; color:#fff; width:15px; height:15px; }
+  .check.partial { border-color:var(--accent); }
+  .check.partial::after { content:""; width:11px; height:2.5px; border-radius:2px; background:var(--accent); }
+  .check.done { background:var(--done); border-color:var(--done); }
+  .check.done svg { opacity:1; transform:scale(1); }
+
+  .tmark { width:26px; height:26px; flex:none; display:grid; place-items:center; }
+  .tmark i { width:11px; height:11px; border-radius:4px; box-sizing:border-box; }
+  .tmark i.parent { background:var(--railc); }
+  .tmark i.leaf { border:2.5px solid var(--railc); }
+
+  .title { flex:1; min-width:0; padding:5px 2px; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .row.is-done > .title { color:var(--text-faint); text-decoration:line-through; text-decoration-thickness:1.5px; }
+  .title[contenteditable="true"]{ outline:none; white-space:normal; overflow:visible; }
+
+  .badge { font-size:11px; font-weight:700; color:var(--text-faint); background:var(--surface-2); border-radius:20px; padding:2px 8px; font-variant-numeric:tabular-nums; flex:none; }
+  .badge.full { color:var(--done); background:var(--done-soft); }
+  .pbar { width:34px; height:5px; border-radius:3px; background:var(--surface-2); overflow:hidden; flex:none; }
+  .pbar > i { display:block; height:100%; background:var(--accent); border-radius:3px; transition:width .35s; }
+  .pbar.full > i { background:var(--done); }
+
+  .rowact { display:flex; gap:0; flex:none; }
+  .rowact .ib { width:36px; height:40px; border:none; background:none; display:grid; place-items:center; color:var(--text-faint); opacity:.55; padding:0; border-radius:8px; }
+  .rowact .ib:active { opacity:1; background:var(--surface-2); }
+  .rowact .ib.del:active { color:#e0556b; background:#e0556b1a; }
+  .rowact .ib svg { width:17px; height:17px; }
+
+  .children { list-style:none; margin:0; padding:0 0 0 20px; position:relative; }
+  .children::before { content:""; position:absolute; left:15px; top:0; bottom:8px; width:1.5px; background:var(--border); border-radius:2px; }
+  .node.collapsed > .children { display:none; }
+  .addsub { display:flex; align-items:center; gap:7px; margin:0 0 2px 22px; padding:8px; color:var(--text-faint); font-size:13px; border:none; background:none; border-radius:8px; }
+  .addsub:active { color:var(--accent); background:var(--surface-hover); }
+  .addsub svg { width:14px; height:14px; }
+
+  .empty { text-align:center; color:var(--text-faint); padding:48px 24px; }
+  .empty svg { opacity:.5; margin-bottom:12px; }
+  .empty p { margin:0 0 4px; font-size:14.5px; }
+  .empty .s { font-size:13px; }
+
+  /* ---- bottom tab bar ---- */
+  .tabbar { flex:none; display:flex; background:var(--surface); border-top:1px solid var(--border); padding-bottom:var(--safe-b); position:relative; }
+  .tabbar button { flex:1; border:none; background:none; padding:9px 4px 8px; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--text-faint); font-size:11px; font-weight:600; }
+  .tabbar button svg { width:24px; height:24px; }
+  .tabbar button.active { color:var(--accent); }
+  .tabbar .themebtn { flex:0 0 66px; color:var(--text-faint); }
+
+  @media (prefers-reduced-motion: reduce){ * { transition:none !important; } }
 </style>
 
 <div class="app">
-  <aside class="sidebar">
-    <div class="brand">
-      <span class="logo">
-        <svg viewBox="0 0 24 24" fill="none">
-          <rect x="3" y="3" width="8.5" height="4" rx="1.4" fill="var(--d1)"/>
-          <rect x="7.5" y="10" width="9" height="4" rx="1.4" fill="var(--d2)"/>
-          <rect x="12" y="17" width="9" height="4" rx="1.4" fill="var(--d3)"/>
-          <path d="M5.2 7v3.4a1 1 0 0 0 1 1H7.5M10 14v3.4a1 1 0 0 0 1 1H12" stroke="var(--text-faint)" stroke-width="1.3" stroke-linecap="round"/>
-        </svg>
-      </span>
-      <span class="name">ひな形タスク<small>TEMPLATE TASKS</small></span>
-    </div>
-
-    <div class="modeswitch">
-      <button data-mode="template" class="active">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M4 5v14h16V5M4 10h16M9 10v9" stroke-linejoin="round"/></svg>
-        テンプレート
-      </button>
-      <button data-mode="today">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12l5 5L20 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        本日のタスク
-      </button>
-    </div>
-
-    <div class="nav-label"><span id="sideLabel">テンプレート一覧</span></div>
-    <div id="sideList"></div>
-    <button class="newbtn" id="newTplBtn">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
-      新しいテンプレート
+  <header class="appbar" id="appbar"></header>
+  <div class="subbar" id="subbar"></div>
+  <main class="screen" id="screen"></main>
+  <nav class="tabbar">
+    <button data-mode="template" id="tabTpl">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M4 5v14h16V5M4 10h16M9 10v9" stroke-linejoin="round"/></svg>
+      テンプレート
     </button>
-
-    <button class="theme-toggle" id="themeBtn">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.6 6.6 0 0 0 9.8 9.8z" stroke-linejoin="round"/></svg>
-      <span id="themeLabel">ダークモード</span>
+    <button data-mode="today" id="tabToday">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L20 6M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      本日のタスク
     </button>
-  </aside>
-
-  <div class="main">
-    <div class="topbar" id="topbar"></div>
-    <div class="quickadd" id="quickadd">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
-      <input id="qinput" type="text" autocomplete="off" />
-      <button class="go" id="qgo">追加</button>
-    </div>
-    <div class="scroll"><div id="content"></div></div>
-  </div>
+    <button class="themebtn" id="themeBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.6 6.6 0 0 0 9.8 9.8z" stroke-linejoin="round"/></svg>
+      <span id="themeLabel">ダーク</span>
+    </button>
+  </nav>
 </div>
 
 <script>
@@ -240,98 +215,82 @@
   let uid = 1;
   const nid = () => "n" + (uid++);
   const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+  const el = (id) => document.getElementById(id);
 
-  // node builders
-  const S = (title, children) => ({ id: nid(), title, children: children || [] });          // template step
-  const I = (title, children, done) => ({ id: nid(), title, done: !!done, collapsed: false, children: children || [] }); // today item
+  const S = (title, children) => ({ id: nid(), title, children: children || [] });
+  const I = (title, children, done) => ({ id: nid(), title, done: !!done, collapsed: false, children: children || [] });
 
   // ---------- data ----------
   let templates = [
-    { id: nid(), emoji: "☀️", name: "朝のルーティン", desc: "毎朝これをこなして一日をスタート", tree: [
-      S("水をコップ1杯飲む"),
-      S("ストレッチ 5分"),
+    { id: nid(), emoji:"☀️", name:"朝のルーティン", desc:"毎朝これをこなして一日をスタート", tree:[
+      S("水をコップ1杯飲む"), S("ストレッチ 5分"),
       S("今日の予定を確認する", [ S("カレンダーを見る"), S("今日やることを3つ決める") ]),
     ]},
-    { id: nid(), emoji: "📊", name: "提案資料の作成", desc: "提案スライドを1本仕上げるまでの手順", tree: [
+    { id: nid(), emoji:"📊", name:"提案資料の作成", desc:"提案スライドを1本仕上げるまでの手順", tree:[
       S("構成をざっくり決める"),
-      S("スライドを作成する", [
-        S("表紙・目次"),
-        S("課題の整理セクション"),
-        S("提案内容セクション", [ S("要点を3つに絞る"), S("図解を1枚入れる") ]),
-        S("見積り・スケジュール"),
-      ]),
-      S("上司にレビューを依頼する"),
-      S("フィードバックを反映する"),
+      S("スライドを作成する", [ S("表紙・目次"), S("課題の整理"), S("提案内容", [ S("要点を3つに絞る"), S("図解を1枚入れる") ]), S("見積り・スケジュール") ]),
+      S("上司にレビューを依頼する"), S("フィードバックを反映する"),
     ]},
-    { id: nid(), emoji: "🔄", name: "週次レビュー", desc: "1週間を振り返って翌週に備える", tree: [
-      S("今週の完了タスクを振り返る"),
-      S("やり残しを棚卸しする"),
+    { id: nid(), emoji:"🔄", name:"週次レビュー", desc:"1週間を振り返って翌週に備える", tree:[
+      S("今週の完了タスクを振り返る"), S("やり残しを棚卸しする"),
       S("来週の計画を立てる", [ S("重要タスクを3つ選ぶ"), S("カレンダーに枠を確保する") ]),
     ]},
   ];
 
-  let mode = "template";           // "template" | "today"
-  let currentTplId = templates[0].id;
+  let mode = "template";      // template | today
+  let tplView = "list";       // list | edit
+  let currentTplId = null;
 
-  // ---------- today groups (seeded with one applied template) ----------
-  const cloneTree = (nodes) => nodes.map(n => ({ id: nid(), title: n.title, done: false, collapsed: false, children: cloneTree(n.children) }));
-  const instantiate = (tpl) => ({ id: nid(), templateId: tpl.id, emoji: tpl.emoji, name: tpl.name, items: cloneTree(tpl.tree) });
+  const cloneTree = (nodes) => nodes.map(n => ({ id:nid(), title:n.title, done:false, collapsed:false, children:cloneTree(n.children) }));
+  const instantiate = (t) => ({ id:nid(), templateId:t.id, emoji:t.emoji, name:t.name, items:cloneTree(t.tree) });
 
   let today = [ instantiate(templates[0]) ];
-  // pre-complete a couple of morning steps for a realistic look
-  today[0].items[0].done = true;                       // 水を飲む
-  today[0].items[1].done = true;                       // ストレッチ
-  const adhoc = { id: nid(), templateId: null, emoji: "📝", name: "個別のタスク", items: [ I("メールの返信", null, false) ] };
-  today.push(adhoc);
+  today[0].items[0].done = true; today[0].items[1].done = true;
+  today.push({ id:nid(), templateId:null, emoji:"📝", name:"個別のタスク", items:[ I("メールの返信") ] });
 
-  // ---------- tree helpers ----------
+  // ---------- helpers ----------
   const leaves = (n) => n.children.length ? n.children.flatMap(leaves) : [n];
   const isLeaf = (n) => n.children.length === 0;
   const doneCount = (n) => leaves(n).filter(l => l.done).length;
   const leafCount = (n) => leaves(n).length;
   const nodeDone = (n) => isLeaf(n) ? !!n.done : leaves(n).every(l => l.done);
-  const setSubtree = (n, val) => { if (isLeaf(n)) n.done = val; else n.children.forEach(c => setSubtree(c, val)); };
+  const setSubtree = (n, v) => { if (isLeaf(n)) n.done = v; else n.children.forEach(c => setSubtree(c, v)); };
   const countSteps = (tree) => tree.reduce((a, n) => a + (isLeaf(n) ? 1 : countSteps(n.children)), 0);
-
-  const removeById = (id, nodes) => {
-    const i = nodes.findIndex(x => x.id === id);
-    if (i >= 0) { nodes.splice(i, 1); return true; }
-    return nodes.some(x => removeById(id, x.children));
-  };
+  const removeById = (id, nodes) => { const i = nodes.findIndex(x => x.id === id); if (i >= 0) { nodes.splice(i,1); return true; } return nodes.some(x => removeById(id, x.children)); };
 
   // ---------- inline edit (re-entrancy safe) ----------
-  const startEdit = (el, node, after) => {
-    el.contentEditable = "true"; el.focus();
-    const r = document.createRange(); r.selectNodeContents(el);
+  const startEdit = (node2, node, after) => {
+    node2.contentEditable = "true"; node2.focus();
+    const r = document.createRange(); r.selectNodeContents(node2);
     const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
     let committed = false;
     const finish = (cancel) => {
-      if (committed) return;            // guard against blur firing during re-render
-      committed = true;
-      el.contentEditable = "false";
-      if (!cancel) { const v = el.textContent.trim(); if (v) node.title = v; }
-      render();
-      if (after) after();
+      if (committed) return; committed = true;
+      node2.contentEditable = "false";
+      if (!cancel) { const v = node2.textContent.trim(); if (v) node.title = v; }
+      render(); if (after) after();
     };
-    el.addEventListener("blur", () => finish(false), { once: true });
-    el.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") { e.preventDefault(); el.blur(); }
-      else if (e.key === "Escape") { e.preventDefault(); el.textContent = node.title; el.blur(); }
+    node2.addEventListener("blur", () => finish(false), { once:true });
+    node2.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); node2.blur(); }
+      else if (e.key === "Escape") { e.preventDefault(); node2.textContent = node.title; node2.blur(); }
     });
   };
 
-  const CHECK = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2"><path d="M4 12l5 5L20 6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-  const TWIST = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M8 5l8 7-8 7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-  const svgAdd = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6v12M6 12h12" stroke-linecap="round"/></svg>`;
-  const svgDel = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 7h14M9 7V5h6v2M6 7l1 12h10l1-12" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  // ---------- svg ----------
+  const CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4"><path d="M4 12l5 5L20 6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const TWIST = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M8 5l8 7-8 7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const ADD = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 6v12M6 12h12" stroke-linecap="round"/></svg>`;
+  const DEL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 7h14M9 7V5h6v2M6 7l1 12h10l1-12" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const CHEV = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const BACK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 5l-7 7 7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
-  // ---------- render one node (shared) ----------
-  // mode: "template" -> structure marker + edit; "today" -> checkbox + progress
+  // ---------- shared node renderer ----------
   const renderNode = (n, depth, kind, roots) => {
     const li = document.createElement("li");
     li.className = "node" + (n.collapsed ? " collapsed" : "");
     li.dataset.nid = n.id;
-    li.style.setProperty("--railc", `var(--d${Math.min(depth, 5)})`);
+    li.style.setProperty("--railc", `var(--d${Math.min(depth,5)})`);
     const leaf = isLeaf(n);
     const done = kind === "today" && nodeDone(n);
 
@@ -339,29 +298,25 @@
     row.className = "row" + (done ? " is-done" : "");
 
     const tw = document.createElement("button");
-    tw.className = "twist" + (leaf ? " leaf" : "");
-    tw.innerHTML = TWIST;
+    tw.className = "twist" + (leaf ? " leaf" : ""); tw.innerHTML = TWIST;
     tw.onclick = (e) => { e.stopPropagation(); n.collapsed = !n.collapsed; render(); };
     row.appendChild(tw);
 
     if (kind === "today") {
-      const dc = doneCount(n), lc = leafCount(n);
+      const dc = doneCount(n);
       const cb = document.createElement("button");
       cb.className = "check" + (done ? " done" : (!leaf && dc > 0 ? " partial" : ""));
       cb.innerHTML = CHECK;
-      cb.title = done ? "未完了に戻す" : "完了にする";
       cb.onclick = (e) => { e.stopPropagation(); setSubtree(n, !done); render(); };
       row.appendChild(cb);
     } else {
       const mk = document.createElement("span");
-      mk.className = "tmark";
-      mk.innerHTML = `<i class="${leaf ? "leaf" : "parent"}"></i>`;
+      mk.className = "tmark"; mk.innerHTML = `<i class="${leaf ? "leaf" : "parent"}"></i>`;
       row.appendChild(mk);
     }
 
     const tt = document.createElement("div");
-    tt.className = "title";
-    tt.textContent = n.title;
+    tt.className = "title"; tt.textContent = n.title;
     tt.ondblclick = () => startEdit(tt, n);
     row.appendChild(tt);
 
@@ -369,41 +324,32 @@
       const dc = doneCount(n), lc = leafCount(n);
       if (kind === "today") {
         const full = dc === lc;
-        const bar = document.createElement("span");
-        bar.className = "pbar" + (full ? " full" : "");
-        bar.innerHTML = `<i style="width:${lc ? dc / lc * 100 : 0}%"></i>`;
-        const badge = document.createElement("span");
-        badge.className = "badge" + (full ? " full" : "");
+        const bar = document.createElement("span"); bar.className = "pbar" + (full ? " full" : "");
+        bar.innerHTML = `<i style="width:${lc ? dc/lc*100 : 0}%"></i>`;
+        const badge = document.createElement("span"); badge.className = "badge" + (full ? " full" : "");
         badge.textContent = `${dc}/${lc}`;
         row.append(bar, badge);
       } else {
-        const badge = document.createElement("span");
-        badge.className = "badge";
-        badge.textContent = `${lc} ステップ`;
+        const badge = document.createElement("span"); badge.className = "badge";
+        badge.textContent = `${lc}`;
         row.append(badge);
       }
     }
 
-    const act = document.createElement("div");
-    act.className = "actions";
-    const add = document.createElement("button");
-    add.className = "iconbtn"; add.title = "サブタスクを追加"; add.innerHTML = svgAdd;
+    const act = document.createElement("div"); act.className = "rowact";
+    const add = document.createElement("button"); add.className = "ib"; add.title = "サブタスクを追加"; add.innerHTML = ADD;
     add.onclick = (e) => { e.stopPropagation(); addChild(n, kind); };
-    const del = document.createElement("button");
-    del.className = "iconbtn del"; del.title = "削除"; del.innerHTML = svgDel;
+    const del = document.createElement("button"); del.className = "ib del"; del.title = "削除"; del.innerHTML = DEL;
     del.onclick = (e) => { e.stopPropagation(); removeById(n.id, roots); render(); };
     act.append(add, del);
     row.appendChild(act);
-
     li.appendChild(row);
 
     if (!leaf) {
       const ul = document.createElement("ul"); ul.className = "children";
-      n.children.forEach(c => ul.appendChild(renderNode(c, depth + 1, kind, n.children)));
+      n.children.forEach(c => ul.appendChild(renderNode(c, depth+1, kind, n.children)));
       li.appendChild(ul);
-      const as = document.createElement("button");
-      as.className = "addsub";
-      as.innerHTML = `${svgAdd} サブタスクを追加`;
+      const as = document.createElement("button"); as.className = "addsub"; as.innerHTML = `${ADD} サブタスクを追加`;
       as.onclick = (e) => { e.stopPropagation(); addChild(n, kind); };
       li.appendChild(as);
     }
@@ -413,226 +359,203 @@
   const addChild = (parent, kind) => {
     parent.collapsed = false;
     const child = kind === "today" ? I("新しいサブタスク") : S("新しいサブタスク");
-    parent.children.push(child);
-    render();
-    requestAnimationFrame(() => {
-      const el = document.querySelector(`[data-nid="${child.id}"] > .row > .title`);
-      if (el) startEdit(el, child);
-    });
+    parent.children.push(child); render();
+    requestAnimationFrame(() => { const e2 = document.querySelector(`[data-nid="${child.id}"] > .row > .title`); if (e2) startEdit(e2, child); });
   };
 
-  // ---------- sidebar ----------
-  const renderSidebar = () => {
-    document.querySelectorAll(".modeswitch button").forEach(b => b.classList.toggle("active", b.dataset.mode === mode));
-    const list = document.getElementById("sideList");
-    const label = document.getElementById("sideLabel");
-    const newBtn = document.getElementById("newTplBtn");
-    list.innerHTML = "";
-
-    if (mode === "template") {
-      label.textContent = "テンプレート一覧";
-      newBtn.style.display = "";
-      templates.forEach(t => {
-        const b = document.createElement("button");
-        b.className = "side-item" + (t.id === currentTplId ? " active" : "");
-        b.innerHTML = `<span class="emoji">${t.emoji}</span><span class="label">${esc(t.name)}</span><span class="meta">${countSteps(t.tree)}</span>`;
-        b.onclick = () => { currentTplId = t.id; render(); };
-        list.appendChild(b);
-      });
-    } else {
-      label.textContent = "テンプレートを適用";
-      newBtn.style.display = "none";
-      if (!templates.length) list.innerHTML = `<div style="padding:8px 10px;color:var(--text-faint);font-size:12.5px">テンプレートがありません</div>`;
-      templates.forEach(t => {
-        const b = document.createElement("button");
-        b.className = "side-item applyable";
-        b.title = "本日のタスクに追加";
-        b.innerHTML = `<span class="emoji">${t.emoji}</span><span class="label">${esc(t.name)}</span><span class="plus">${svgAdd}</span>`;
-        b.onclick = () => { today.push(instantiate(t)); render(); };
-        list.appendChild(b);
-      });
-    }
+  // ---------- appbar builder ----------
+  const setAppbar = (opts) => {
+    const bar = el("appbar"); bar.innerHTML = "";
+    const left = document.createElement("div"); left.className = "slot";
+    if (opts.back) { const b = document.createElement("button"); b.className = "iconbtn-lg"; b.innerHTML = BACK; b.onclick = opts.back; left.appendChild(b); }
+    const tw = document.createElement("div"); tw.className = "titlewrap";
+    tw.innerHTML = (opts.eyebrow ? `<div class="eyebrow">${esc(opts.eyebrow)}</div>` : "") +
+      `<h1>${opts.emoji ? `<span class="em" id="abEmoji">${opts.emoji}</span>` : ""}<span id="abTitle">${esc(opts.title)}</span></h1>`;
+    bar.append(left, tw);
+    if (opts.right) bar.appendChild(opts.right);
+    return bar;
   };
 
-  // ---------- topbar + main ----------
   const dateLine = () => {
     const now = new Date(2026, 6, 20);
     const wd = ["日","月","火","水","木","金","土"][now.getDay()];
-    return `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日（${wd}）`;
+    return `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日（${wd}）`;
   };
 
-  const renderTemplateMode = () => {
-    const top = document.getElementById("topbar");
+  // ---------- template: list ----------
+  const renderTplList = () => {
+    setAppbar({ eyebrow:"テンプレート", title:"ひな形の一覧" });
+    el("subbar").style.display = "none";
+    const s = el("screen"); s.innerHTML = "";
+    templates.forEach(t => {
+      const card = document.createElement("div"); card.className = "tplcard";
+      const body = document.createElement("button");
+      body.className = "body"; body.style.width = "100%"; body.style.border = "none"; body.style.background = "none"; body.style.textAlign = "left";
+      body.innerHTML = `<span class="em">${t.emoji}</span>
+        <span class="tx"><b>${esc(t.name)}</b><span>${esc(t.desc || "説明なし")}</span></span>
+        <span class="chev">${CHEV}</span>`;
+      body.onclick = () => { currentTplId = t.id; tplView = "edit"; render(); };
+      const foot = document.createElement("div"); foot.className = "foot";
+      const cnt = document.createElement("div"); cnt.className = "foot"; // placeholder
+      foot.innerHTML = `<span style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px" class="cnt">${countSteps(t.tree)} ステップ</span>`;
+      const applyBtn = document.createElement("button");
+      applyBtn.innerHTML = `${ADD} 本日に追加`;
+      applyBtn.onclick = () => { today.push(instantiate(t)); mode = "today"; render(); };
+      foot.appendChild(applyBtn);
+      card.append(body, foot);
+      s.appendChild(card);
+    });
+    const nb = document.createElement("button"); nb.className = "newcard"; nb.innerHTML = `${ADD} 新しいテンプレート`;
+    nb.onclick = () => {
+      const t = { id:nid(), emoji:"🗂️", name:"新しいテンプレート", desc:"", tree:[] };
+      templates.push(t); currentTplId = t.id; tplView = "edit"; render();
+      requestAnimationFrame(() => { const e2 = el("abTitle"); if (e2) startEdit(e2, t); });
+    };
+    s.appendChild(nb);
+  };
+
+  // ---------- template: edit ----------
+  const renderTplEdit = () => {
     const tpl = templates.find(t => t.id === currentTplId);
-    const content = document.getElementById("content");
-    const qa = document.getElementById("quickadd");
-    if (!tpl) {
-      top.innerHTML = `<div class="thead"><h1>テンプレート</h1></div>`;
-      qa.style.display = "none";
-      content.innerHTML = `<div class="empty"><p>テンプレートがありません</p><p class="s">左下の「新しいテンプレート」から作成しましょう。</p></div>`;
-      return;
-    }
-    qa.style.display = "";
-    document.getElementById("qinput").placeholder = "ステップを追加…（例：参考資料を集める）";
-    top.innerHTML = "";
-    const head = document.createElement("div"); head.className = "thead";
-    head.innerHTML = `<div class="eyebrow">テンプレートを編集</div>
-      <h1><span class="emoji" id="tplEmoji" title="クリックで絵文字を変更" style="cursor:pointer">${tpl.emoji}</span><span id="tplName">${esc(tpl.name)}</span></h1>
-      <p class="sub">${esc(tpl.desc || "説明なし")} ・ 全 ${countSteps(tpl.tree)} ステップ</p>`;
-    const apply = document.createElement("button");
-    apply.className = "btn primary";
-    apply.innerHTML = `${CHECK && '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>'} 本日のタスクに追加`;
-    apply.onclick = () => { today.push(instantiate(tpl)); mode = "today"; render(); };
-    const delBtn = document.createElement("button");
-    delBtn.className = "btn ghost"; delBtn.title = "テンプレートを削除";
-    delBtn.innerHTML = svgDel;
-    delBtn.onclick = () => {
+    if (!tpl) { tplView = "list"; return renderTplList(); }
+    const del = document.createElement("button"); del.className = "iconbtn-lg danger"; del.innerHTML = DEL;
+    del.onclick = () => {
       if (!confirm(`テンプレート「${tpl.name}」を削除しますか？`)) return;
-      templates = templates.filter(t => t.id !== tpl.id);
-      currentTplId = templates[0] ? templates[0].id : null;
-      render();
+      templates = templates.filter(t => t.id !== tpl.id); tplView = "list"; render();
     };
-    top.append(head, apply, delBtn);
+    setAppbar({ back: () => { tplView = "list"; render(); }, emoji: tpl.emoji, title: tpl.name, right: del });
+    el("abTitle").ondblclick = (e) => startEdit(e.target, tpl);
+    el("abEmoji").onclick = () => { const v = prompt("絵文字を入力", tpl.emoji); if (v && v.trim()) { tpl.emoji = v.trim(); render(); } };
 
-    // editable name + emoji
-    head.querySelector("#tplName").ondblclick = (e) => startEdit(e.target, tpl);
-    head.querySelector("#tplEmoji").onclick = () => {
-      const v = prompt("絵文字を入力", tpl.emoji);
-      if (v && v.trim()) { tpl.emoji = v.trim(); render(); }
-    };
+    // subbar: add-step quick add
+    const sb = el("subbar"); sb.style.display = ""; sb.innerHTML = "";
+    const qa = document.createElement("div"); qa.className = "quickadd";
+    qa.innerHTML = `<div class="box">${ADDsvg()}<input id="qinput" placeholder="ステップを追加…" autocomplete="off"></div><button class="go" id="qgo">追加</button>`;
+    sb.appendChild(qa);
+    bindQuickAdd(() => {
+      const v = el("qinput").value.trim(); if (!v) return false;
+      tpl.tree.push(S(v)); return true;
+    });
 
-    content.innerHTML = "";
+    const s = el("screen"); s.innerHTML = "";
+    const meta = document.createElement("div"); meta.className = "edmeta";
+    meta.innerHTML = `<div class="desc">${esc(tpl.desc || "このテンプレートに説明はまだありません")}</div><div class="steps">全 ${countSteps(tpl.tree)} ステップ ・ タイトルをダブルタップで編集</div>`;
+    s.appendChild(meta);
+
     const card = document.createElement("div"); card.className = "editcard";
     if (!tpl.tree.length) {
-      card.innerHTML = `<div class="empty" style="padding:30px"><p>まだステップがありません</p><p class="s">上の入力欄からステップを追加してください。</p></div>`;
+      card.innerHTML = `<div class="empty" style="padding:28px"><p>まだステップがありません</p><p class="s">上の入力欄から追加しましょう。</p></div>`;
     } else {
       const ul = document.createElement("ul"); ul.className = "tree";
       tpl.tree.forEach(n => ul.appendChild(renderNode(n, 1, "template", tpl.tree)));
       card.appendChild(ul);
     }
-    content.appendChild(card);
+    s.appendChild(card);
+
+    const apply = document.createElement("button"); apply.className = "bigbtn primary";
+    apply.innerHTML = `${ADD} 本日のタスクに追加`;
+    apply.onclick = () => { today.push(instantiate(tpl)); mode = "today"; render(); };
+    s.appendChild(apply);
+    const delText = document.createElement("button"); delText.className = "textbtn"; delText.textContent = "このテンプレートを削除";
+    delText.onclick = del.onclick;
+    s.appendChild(delText);
   };
 
-  const renderTodayMode = () => {
-    const top = document.getElementById("topbar");
-    const content = document.getElementById("content");
-    const qa = document.getElementById("quickadd");
-    qa.style.display = "";
-    document.getElementById("qinput").placeholder = "個別のタスクを追加…";
-
+  // ---------- today ----------
+  const renderToday = () => {
     const allLeaves = today.flatMap(g => g.items.flatMap(leaves));
     const dn = allLeaves.filter(l => l.done).length;
-    const pct = allLeaves.length ? Math.round(dn / allLeaves.length * 100) : 0;
-    const C = 2 * Math.PI * 21;
-    top.innerHTML = `
-      <div class="thead">
-        <div class="eyebrow">本日のタスク</div>
-        <h1>${dateLine()}</h1>
-        <p class="sub">${allLeaves.length ? `${dn} / ${allLeaves.length} 件 完了` : "テンプレートを適用してタスクを組み立てましょう"}</p>
-      </div>
-      <div class="ring">
-        <div class="pct"><b>${pct}%</b><span>達成率</span></div>
-        <svg width="52" height="52" viewBox="0 0 52 52">
-          <circle class="track" cx="26" cy="26" r="21" fill="none" stroke-width="6"/>
-          <circle class="fill" cx="26" cy="26" r="21" fill="none" stroke-width="6" stroke-dasharray="${C}" stroke-dashoffset="${C * (1 - pct / 100)}"/>
-        </svg>
-      </div>`;
+    const pct = allLeaves.length ? Math.round(dn/allLeaves.length*100) : 0;
+    const C = 2 * Math.PI * 15;
+    const ring = document.createElement("div"); ring.className = "ring";
+    ring.innerHTML = `<div class="pct"><b>${pct}%</b></div>
+      <svg width="38" height="38" viewBox="0 0 38 38"><circle class="track" cx="19" cy="19" r="15" fill="none" stroke-width="5"/>
+      <circle class="fill" cx="19" cy="19" r="15" fill="none" stroke-width="5" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-pct/100)}"/></svg>`;
+    setAppbar({ eyebrow:"本日のタスク", title:dateLine(), right:ring });
 
-    content.innerHTML = "";
+    // subbar: individual quick-add + apply chips
+    const sb = el("subbar"); sb.style.display = ""; sb.innerHTML = "";
+    const qa = document.createElement("div"); qa.className = "quickadd";
+    qa.innerHTML = `<div class="box">${ADDsvg()}<input id="qinput" placeholder="個別のタスクを追加…" autocomplete="off"></div><button class="go" id="qgo">追加</button>`;
+    sb.appendChild(qa);
+    bindQuickAdd(() => {
+      const v = el("qinput").value.trim(); if (!v) return false;
+      let g = today.find(x => x.templateId === null);
+      if (!g) { g = { id:nid(), templateId:null, emoji:"📝", name:"個別のタスク", items:[] }; today.push(g); }
+      g.items.push(I(v)); return true;
+    });
+    const chips = document.createElement("div"); chips.className = "chiprow";
+    chips.innerHTML = `<span class="lbl">ひな形から</span>`;
+    templates.forEach(t => {
+      const c = document.createElement("button"); c.className = "chip";
+      c.innerHTML = `<span class="em">${t.emoji}</span>${esc(t.name)}<span class="p">${ADD}</span>`;
+      c.onclick = () => { today.push(instantiate(t)); render(); };
+      chips.appendChild(c);
+    });
+    sb.appendChild(chips);
+
+    const s = el("screen"); s.innerHTML = "";
     if (!today.length) {
-      content.innerHTML = `<div class="empty">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 5h16M4 5v14h16V5M4 10h16M9 10v9" stroke-linejoin="round"/></svg>
-        <p>本日のタスクはまだありません</p>
-        <p class="s">左の一覧からテンプレートを適用すると、ここに手順が展開されます。</p></div>`;
+      s.innerHTML = `<div class="empty"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M4 5h16M4 5v14h16V5M4 10h16M9 10v9" stroke-linejoin="round"/></svg>
+        <p>本日のタスクはまだありません</p><p class="s">上の「ひな形から」をタップして組み立てましょう。</p></div>`;
       return;
     }
     today.forEach(g => {
-      const card = document.createElement("div");
       const gLeaves = g.items.flatMap(leaves);
       const gDone = gLeaves.filter(l => l.done).length;
       const allDone = gLeaves.length && gDone === gLeaves.length;
-      card.className = "group" + (allDone ? " done-all" : "");
+      const card = document.createElement("div"); card.className = "group" + (allDone ? " done-all" : "");
       const head = document.createElement("div"); head.className = "group-head";
-      head.innerHTML = `<span class="emoji">${g.emoji}</span>
-        <span class="gname">${esc(g.name)}</span>
-        ${g.templateId ? `<span class="from">テンプレートから</span>` : ""}
-        <span class="badge${allDone ? " full" : ""}">${gDone}/${gLeaves.length}</span>`;
-      const rm = document.createElement("button");
-      rm.className = "iconbtn del"; rm.title = "この束を本日から外す"; rm.innerHTML = svgDel;
-      rm.style.opacity = ".6";
+      head.innerHTML = `<span class="em">${g.emoji}</span><span class="gname">${esc(g.name)}</span><span class="badge${allDone ? " full" : ""}">${gDone}/${gLeaves.length}</span>`;
+      const rm = document.createElement("button"); rm.className = "iconbtn-lg danger"; rm.style.width = "36px"; rm.style.height = "36px"; rm.innerHTML = DEL; rm.title = "本日から外す";
       rm.onclick = () => { today = today.filter(x => x.id !== g.id); render(); };
       head.appendChild(rm);
       card.appendChild(head);
-
       const body = document.createElement("div"); body.className = "group-body";
-      if (!g.items.length) {
-        body.innerHTML = `<div style="color:var(--text-faint);font-size:12.5px;padding:6px 8px">タスクがありません（＋で追加）</div>`;
-      } else {
+      if (g.items.length) {
         const ul = document.createElement("ul"); ul.className = "tree";
         g.items.forEach(n => ul.appendChild(renderNode(n, 1, "today", g.items)));
         body.appendChild(ul);
       }
-      const as = document.createElement("button");
-      as.className = "addsub"; as.style.opacity = ".8"; as.style.marginLeft = "8px";
-      as.innerHTML = `${svgAdd} タスクを追加`;
-      as.onclick = () => {
-        const child = I("新しいタスク");
-        g.items.push(child); render();
-        requestAnimationFrame(() => { const el = document.querySelector(`[data-nid="${child.id}"] > .row > .title`); if (el) startEdit(el, child); });
-      };
+      const as = document.createElement("button"); as.className = "addsub"; as.innerHTML = `${ADD} タスクを追加`;
+      as.onclick = () => { const child = I("新しいタスク"); g.items.push(child); render(); requestAnimationFrame(() => { const e2 = document.querySelector(`[data-nid="${child.id}"] > .row > .title`); if (e2) startEdit(e2, child); }); };
       body.appendChild(as);
       card.appendChild(body);
-      content.appendChild(card);
+      s.appendChild(card);
     });
+  };
+
+  const ADDsvg = () => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>`;
+  const bindQuickAdd = (handler) => {
+    const input = el("qinput"), go = el("qgo");
+    const submit = () => { if (handler()) { render(); requestAnimationFrame(() => { const i = el("qinput"); if (i) i.focus(); }); } };
+    go.onclick = submit;
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") submit(); });
   };
 
   // ---------- render ----------
   const render = () => {
-    renderSidebar();
-    if (mode === "template") renderTemplateMode(); else renderTodayMode();
+    el("tabTpl").classList.toggle("active", mode === "template");
+    el("tabToday").classList.toggle("active", mode === "today");
+    if (mode === "template") { if (tplView === "edit") renderTplEdit(); else renderTplList(); }
+    else renderToday();
   };
 
-  // ---------- quick add ----------
-  const qinput = document.getElementById("qinput");
-  const submit = () => {
-    const v = qinput.value.trim(); if (!v) return;
-    if (mode === "template") {
-      const tpl = templates.find(t => t.id === currentTplId);
-      if (tpl) tpl.tree.push(S(v));
-    } else {
-      let g = today.find(x => x.templateId === null);
-      if (!g) { g = { id: nid(), templateId: null, emoji: "📝", name: "個別のタスク", items: [] }; today.push(g); }
-      g.items.push(I(v));
-    }
-    qinput.value = ""; render(); qinput.focus();
-  };
-  document.getElementById("qgo").onclick = submit;
-  qinput.addEventListener("keydown", (e) => { if (e.key === "Enter") submit(); });
-
-  // ---------- mode switch ----------
-  document.querySelectorAll(".modeswitch button").forEach(b => {
-    b.onclick = () => { mode = b.dataset.mode; render(); };
+  document.querySelectorAll(".tabbar button[data-mode]").forEach(b => {
+    b.onclick = () => { mode = b.dataset.mode; if (mode === "template") tplView = "list"; render(); };
   });
 
-  // ---------- new template ----------
-  document.getElementById("newTplBtn").onclick = () => {
-    const t = { id: nid(), emoji: "🗂️", name: "新しいテンプレート", desc: "", tree: [] };
-    templates.push(t); currentTplId = t.id; mode = "template"; render();
-    requestAnimationFrame(() => { const el = document.getElementById("tplName"); if (el) startEdit(el, t); });
-  };
-
-  // ---------- theme ----------
-  const themeLabel = document.getElementById("themeLabel");
+  // theme
+  const themeLabel = el("themeLabel");
   const setLabel = () => {
     const isDark = document.documentElement.getAttribute("data-theme") === "dark"
       || (!document.documentElement.getAttribute("data-theme") && matchMedia("(prefers-color-scheme: dark)").matches);
-    themeLabel.textContent = isDark ? "ライトモード" : "ダークモード";
+    themeLabel.textContent = isDark ? "ライト" : "ダーク";
   };
-  document.getElementById("themeBtn").onclick = () => {
+  el("themeBtn").onclick = () => {
     const cur = document.documentElement.getAttribute("data-theme");
     const isDark = cur === "dark" || (!cur && matchMedia("(prefers-color-scheme: dark)").matches);
-    document.documentElement.setAttribute("data-theme", isDark ? "light" : "dark");
-    setLabel();
+    document.documentElement.setAttribute("data-theme", isDark ? "light" : "dark"); setLabel();
   };
   setLabel();
 
