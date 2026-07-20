@@ -25,7 +25,7 @@
   body {
     margin:0; background:var(--bg); color:var(--text);
     font-family:-apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic UI","Segoe UI", Meiryo, sans-serif;
-    font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+    font-size:14px; line-height:1.4; -webkit-font-smoothing:antialiased;
   }
   body.dragging { user-select:none; -webkit-user-select:none; }
   button { font-family:inherit; cursor:pointer; color:inherit; }
@@ -89,18 +89,18 @@
   .fab svg { width:27px; height:27px; }
 
   /* template cards */
-  .tplcard { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:12px; overflow:hidden; }
-  .tplcard .body { display:flex; align-items:center; gap:12px; padding:15px 14px; width:100%; border:none; background:none; text-align:left; }
+  .tplcard { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:10px; overflow:hidden; }
+  .tplcard .body { display:flex; align-items:center; gap:11px; padding:11px 13px; width:100%; border:none; background:none; text-align:left; }
   .tplcard .body:active { background:var(--surface-hover); }
-  .tplcard .em { font-size:26px; flex:none; width:44px; height:44px; display:grid; place-items:center; background:var(--surface-2); border-radius:12px; }
+  .tplcard .em { font-size:22px; flex:none; width:38px; height:38px; display:grid; place-items:center; background:var(--surface-2); border-radius:10px; }
   .tplcard .tx { flex:1; min-width:0; }
-  .tplcard .tx b { display:block; font-size:16px; font-weight:700; }
+  .tplcard .tx b { display:block; font-size:15px; font-weight:700; }
   .tplcard .tx span { display:block; font-size:12.5px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px; }
   .tplcard .chev { color:var(--text-faint); flex:none; }
   .tplcard .chev svg { width:20px; height:20px; }
   .tplcard .foot { display:flex; align-items:center; border-top:1px solid var(--border); }
-  .tplcard .foot .cnt { flex:1; padding:12px 14px; font-size:12.5px; color:var(--text-faint); font-weight:600; font-variant-numeric:tabular-nums; }
-  .tplcard .foot button { border:none; background:none; padding:12px 16px; font-size:13.5px; font-weight:600; color:var(--accent); display:flex; align-items:center; gap:7px; }
+  .tplcard .foot .cnt { flex:1; padding:9px 13px; font-size:12px; color:var(--text-faint); font-weight:600; font-variant-numeric:tabular-nums; }
+  .tplcard .foot button { border:none; background:none; padding:9px 15px; font-size:13px; font-weight:600; color:var(--accent); display:flex; align-items:center; gap:7px; }
   .tplcard .foot button:active { background:var(--accent-soft); }
   .tplcard .foot button svg { width:16px; height:16px; }
 
@@ -109,14 +109,14 @@
   .newcard svg { width:16px; height:16px; }
 
   /* today groups */
-  .group { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:12px; }
-  .group-head { display:flex; align-items:center; gap:10px; padding:12px 12px 12px 14px; border-bottom:1px solid var(--border); }
+  .group { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:10px; }
+  .group-head { display:flex; align-items:center; gap:9px; padding:9px 10px 9px 13px; border-bottom:1px solid var(--border); }
   .group-head .em { font-size:17px; }
-  .group-head .gname { font-weight:700; font-size:15px; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .group-head .gname { font-weight:700; font-size:14px; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .group.done-all .group-head { background:var(--done-soft); }
   .group-body { padding:6px 8px 4px; }
 
-  .editcard { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:8px; margin-bottom:14px; }
+  .editcard { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:6px; margin-bottom:12px; }
 
   .bigbtn { display:flex; align-items:center; justify-content:center; gap:9px; width:100%; padding:14px; border-radius:12px; border:none; font-size:15px; font-weight:700; }
   .bigbtn.primary { background:var(--accent); color:#fff; box-shadow:var(--shadow); }
@@ -128,7 +128,7 @@
   /* tree */
   .tree { list-style:none; margin:0; padding:0; }
   .node { position:relative; }
-  .row { display:flex; align-items:center; gap:8px; padding:5px 10px 5px 10px; border-radius:10px; min-height:46px; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+  .row { display:flex; align-items:center; gap:8px; padding:2px 10px; border-radius:9px; min-height:38px; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
   .row:active { background:var(--surface-hover); }
   .row.selected { background:var(--accent-soft); }
   /* live drag: lifted card + tinted placeholder slot (TickTick-style) */
@@ -141,7 +141,7 @@
   .dragging .screen { overflow:hidden; touch-action:none; }
   .dragging .row, .dragging .title, .dragging .check { touch-action:none; }
 
-  .check { width:26px; height:26px; flex:none; border-radius:8px; border:2px solid var(--border-strong); background:var(--surface); display:grid; place-items:center; padding:0; transition:all .13s; }
+  .check { width:23px; height:23px; flex:none; border-radius:7px; border:2px solid var(--border-strong); background:var(--surface); display:grid; place-items:center; padding:0; transition:all .13s; }
   .check:active { transform:scale(.92); }
   .check svg { opacity:0; transform:scale(.5); transition:all .13s; color:#fff; width:15px; height:15px; }
   .check.partial { border-color:var(--accent); }
@@ -149,12 +149,12 @@
   .check.done { background:var(--done); border-color:var(--done); }
   .check.done svg { opacity:1; transform:scale(1); }
 
-  .tmark { width:26px; height:26px; flex:none; display:grid; place-items:center; }
+  .tmark { width:23px; height:23px; flex:none; display:grid; place-items:center; }
   .tmark i { width:11px; height:11px; border-radius:4px; box-sizing:border-box; }
   .tmark i.parent { background:var(--railc); }
   .tmark i.leaf { border:2.5px solid var(--railc); }
 
-  .title { flex:1; min-width:0; padding:6px 4px; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .title { flex:1; min-width:0; padding:4px 4px; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .row.is-done > .title { color:var(--text-faint); text-decoration:line-through; text-decoration-thickness:1.5px; }
   .title[contenteditable="true"]{ outline:none; white-space:normal; overflow:visible; user-select:text; -webkit-user-select:text; }
 
@@ -166,7 +166,7 @@
 
   .children { list-style:none; margin:0; padding:0 0 0 26px; position:relative; }
 
-  .listadd { display:flex; align-items:center; gap:7px; margin:2px 4px 6px; padding:9px 8px; color:var(--text-faint); font-size:13.5px; border:none; background:none; border-radius:8px; width:calc(100% - 8px); }
+  .listadd { display:flex; align-items:center; gap:7px; margin:2px 4px 6px; padding:7px 8px; color:var(--text-faint); font-size:13px; border:none; background:none; border-radius:8px; width:calc(100% - 8px); }
   .listadd:active { color:var(--accent); background:var(--surface-hover); }
   .listadd svg { width:15px; height:15px; }
 
