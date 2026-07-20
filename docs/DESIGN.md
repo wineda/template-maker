@@ -1,6 +1,6 @@
 # ひな形タスク — 設計書 (React + Java)
 
-現行モック（`mockup/index.html`）の挙動をそのまま実プロダクトに落とし込むための設計。
+現行モック（リポジトリ直下の `index.html`）の挙動をそのまま実プロダクトに落とし込むための設計。
 フロントエンド **React (TypeScript)**、バックエンド **Java (Spring Boot)** を前提とする。
 
 - ライブのモック: https://claude.ai/code/artifact/4096e48f-11b1-404b-bb01-ad00052b7e85
@@ -317,7 +317,8 @@ frontend/
 template-maker/
   backend/     Spring Boot (Gradle)
   frontend/    React + Vite + TS
-  mockup/      既存 HTML モック（UX リファレンス）
+  index.html   PWA本体（HTML/CSS/JS 一体・UXの正）
+  manifest.webmanifest, sw.js, icon-*.png  PWA アセット
   docs/        本設計書ほか
 ```
 
@@ -334,4 +335,4 @@ template-maker/
 
 ---
 
-> 本設計はモック `mockup/index.html` の挙動を基準に更新する。UX に変更が入ったらモックを先に直し、本書と API/モデルを追従させる。
+> 本設計はモック（リポジトリ直下の `index.html`）の挙動を基準に更新する。UX に変更が入ったらモックを先に直し、本書と API/モデルを追従させる。
