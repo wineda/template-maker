@@ -89,7 +89,10 @@
   .fab svg { width:27px; height:27px; }
 
   /* template cards */
-  .tplcard { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:10px; overflow:hidden; }
+  .tplcard { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:10px; overflow:hidden; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+  .tplcard.cardghost { position:fixed; z-index:80; pointer-events:none; margin:0; box-shadow:0 16px 34px -8px rgba(20,24,48,.42), 0 3px 10px rgba(0,0,0,.12); }
+  .tplcard.card-live { background:var(--accent-soft); border-color:var(--accent); box-shadow:inset 0 0 0 1.5px var(--accent); }
+  .tplcard.card-live > * { visibility:hidden; }
   .tplcard .body { display:flex; align-items:center; gap:11px; padding:11px 13px; width:100%; border:none; background:none; text-align:left; }
   .tplcard .body:active { background:var(--surface-hover); }
   .tplcard .em { font-size:22px; flex:none; width:38px; height:38px; display:grid; place-items:center; background:var(--surface-2); border-radius:10px; }
@@ -563,6 +566,94 @@
 
   const depthOf = (id, arr, d = 0) => { for (const n of arr) { if (n.id === id) return d; if (n.children.length) { const r = depthOf(id, n.children, d + 1); if (r >= 0) return r; } } return -1; };
 
+  // ---------- template list card drag (long-press, live reorder) ----------
+  const armCardLongPress = (e, tpl) => {
+    if (dragging) return;
+    if (e.button != null && e.button !== 0) return;
+    const cardEl = e.currentTarget;
+    const touchTarget = e.target;
+    const sx = e.clientX, sy = e.clientY;
+    let timer = setTimeout(() => { timer = null; cleanup(); beginCardDrag(tpl, cardEl, sx, sy, touchTarget); }, LONGPRESS_MS);
+    const onMove = (ev) => { if (Math.abs(ev.clientX - sx) > 8 || Math.abs(ev.clientY - sy) > 8) clear(); };
+    const onEnd = () => clear();
+    const clear = () => { if (timer) { clearTimeout(timer); timer = null; } cleanup(); };
+    const cleanup = () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onEnd); window.removeEventListener("pointercancel", onEnd); };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onEnd);
+    window.addEventListener("pointercancel", onEnd);
+  };
+
+  const beginCardDrag = (tpl, cardEl, sx, sy, touchTarget) => {
+    if (dragging) return;
+    dragging = true;
+    const rect = cardEl.getBoundingClientRect();
+    const grabDY = sy - rect.top;
+    const snapshot = templates.slice();
+    let lastSig = null;
+
+    const ghost = document.createElement("div");
+    ghost.className = "tplcard cardghost";
+    ghost.innerHTML = cardEl.innerHTML;
+    ghost.style.left = rect.left + "px"; ghost.style.width = rect.width + "px"; ghost.style.top = (sy - grabDY) + "px";
+    document.body.appendChild(ghost);
+    document.body.classList.add("dragging");
+
+    const decorate = () => {
+      document.querySelectorAll(".tplcard.card-live").forEach(c => c.classList.remove("card-live"));
+      const c = document.querySelector(`.tplcard[data-tid="${tpl.id}"]`);
+      if (c) c.classList.add("card-live");
+    };
+    decorate();
+
+    const move = (ev) => {
+      const y = ev.clientY;
+      ghost.style.top = (y - grabDY) + "px";
+      const others = templates.filter(t => t.id !== tpl.id);
+      let idx = others.length;
+      for (let i = 0; i < others.length; i++) {
+        const c = document.querySelector(`.tplcard[data-tid="${others[i].id}"]`);
+        if (!c) continue;
+        const r = c.getBoundingClientRect();
+        if (y < r.top + r.height / 2) { idx = i; break; }
+      }
+      if (idx === lastSig) return;
+      lastSig = idx;
+      const arr = others.slice(); arr.splice(idx, 0, tpl);
+      templates = arr;
+      const st = el("screen").scrollTop; render(); el("screen").scrollTop = st;
+      decorate();
+    };
+    const onTouchMove = (ev) => { if (ev.cancelable) ev.preventDefault(); const t = ev.touches[0] || ev.changedTouches[0]; if (t) move(t); };
+    const onPtrMove = (ev) => move(ev);
+    const onEndUp = () => finish(false);
+    const onKey = (ev) => { if (ev.key === "Escape") finish(true); };
+    const finish = (cancel) => {
+      if (!dragging) return;
+      activeDragEnd = null;
+      touchTarget.removeEventListener("touchmove", onTouchMove);
+      touchTarget.removeEventListener("touchend", onEndUp);
+      touchTarget.removeEventListener("touchcancel", onEndUp);
+      window.removeEventListener("pointermove", onPtrMove);
+      window.removeEventListener("pointerup", onEndUp);
+      window.removeEventListener("blur", onEndUp);
+      window.removeEventListener("keydown", onKey);
+      ghost.remove();
+      document.body.classList.remove("dragging");
+      document.querySelectorAll(".tplcard.card-live").forEach(c => c.classList.remove("card-live"));
+      if (cancel) templates = snapshot;
+      dragging = false; suppressTap = true; setTimeout(() => { suppressTap = false; }, 60);
+      const st = el("screen").scrollTop; render(); el("screen").scrollTop = st;
+    };
+    activeDragEnd = () => finish(false);
+    touchTarget.addEventListener("touchmove", onTouchMove, { passive: false });
+    touchTarget.addEventListener("touchend", onEndUp);
+    touchTarget.addEventListener("touchcancel", onEndUp);
+    window.addEventListener("pointermove", onPtrMove);
+    window.addEventListener("pointerup", onEndUp);
+    window.addEventListener("blur", onEndUp);
+    window.addEventListener("keydown", onKey);
+  };
+
   // ---------- action sheet ----------
   let sheetEl = null;
   const closeSheet = () => { if (!sheetEl) return; const s = sheetEl; sheetEl = null; s.classList.remove("show"); setTimeout(() => s.remove(), 240); };
@@ -684,19 +775,20 @@
     el("subbar").style.display = "none";
     const s = el("screen"); s.innerHTML = "";
     templates.forEach(t => {
-      const card = document.createElement("div"); card.className = "tplcard";
+      const card = document.createElement("div"); card.className = "tplcard"; card.dataset.tid = t.id;
       const body = document.createElement("button"); body.className = "body";
       body.innerHTML = `<span class="em">${t.emoji}</span>
         <span class="tx"><b>${esc(t.name)}</b><span>${esc(t.desc || "説明なし")}</span></span>
         <span class="chev">${CHEV}</span>`;
-      body.onclick = () => { currentTplId = t.id; tplView = "edit"; render(); };
+      body.onclick = () => { if (suppressTap || dragging) return; currentTplId = t.id; tplView = "edit"; render(); };
       const foot = document.createElement("div"); foot.className = "foot";
       const days = (t.repeat || []).length ? " ・ 🔁 " + [1,2,3,4,5,6,0].filter(d => t.repeat.includes(d)).map(d => ["日","月","火","水","木","金","土"][d]).join("") : "";
       foot.innerHTML = `<span class="cnt">${countSteps(t.tree)} ステップ${days}</span>`;
       const applyBtn = document.createElement("button"); applyBtn.innerHTML = `${ADD} 本日に追加`;
-      applyBtn.onclick = () => { today.push(instantiate(t)); mode = "today"; render(); };
+      applyBtn.onclick = () => { if (suppressTap || dragging) return; today.push(instantiate(t)); mode = "today"; render(); };
       foot.appendChild(applyBtn);
       card.append(body, foot);
+      card.addEventListener("pointerdown", (e) => armCardLongPress(e, t));
       s.appendChild(card);
     });
     const nb = document.createElement("button"); nb.className = "newcard"; nb.innerHTML = `${ADD} 新しいテンプレート`;
