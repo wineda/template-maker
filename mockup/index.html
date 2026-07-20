@@ -338,8 +338,8 @@
     if (e.target.closest(".check") || e.target.isContentEditable) return;   // let checkbox / editing work
     if (e.button != null && e.button !== 0) return;
     const srcRow = e.currentTarget;
-    const sx = e.clientX, sy = e.clientY;
-    let timer = setTimeout(() => { timer = null; cleanup(); beginDrag(node, treeRoot, srcRow, sx, sy); }, LONGPRESS_MS);
+    const sx = e.clientX, sy = e.clientY, isTouch = e.pointerType === "touch";
+    let timer = setTimeout(() => { timer = null; cleanup(); beginDrag(node, treeRoot, srcRow, sx, sy, isTouch); }, LONGPRESS_MS);
     const onMove = (ev) => { if (Math.abs(ev.clientX - sx) > 8 || Math.abs(ev.clientY - sy) > 8) { clear(); } };
     const onEnd = () => clear();
     const clear = () => { if (timer) { clearTimeout(timer); timer = null; } cleanup(); };
@@ -349,7 +349,7 @@
     window.addEventListener("pointercancel", onEnd);
   };
 
-  const beginDrag = (node, treeRoot, srcRow, sx, sy) => {
+  const beginDrag = (node, treeRoot, srcRow, sx, sy, isTouch) => {
     if (dragging) return;
     dragging = true;
     const dragId = node.id;
@@ -423,13 +423,20 @@
       const st = el("screen").scrollTop; render(); el("screen").scrollTop = st;
       decorate();
     };
-    const preventScroll = (ev) => { if (ev.cancelable) ev.preventDefault(); };  // stop touch scrolling → no pointercancel
+    // Touch drags are driven by TOUCH events, not pointer events: touch events keep
+    // firing to the original target even after each re-render removes the row under
+    // the finger (pointer events would fire pointercancel and abort on Android/Brave).
+    const onTouchMove = (ev) => { if (ev.cancelable) ev.preventDefault(); const t = ev.touches[0] || ev.changedTouches[0]; if (t) move(t); };
+    const onPtrMove = (ev) => move(ev);
+    const onEndUp = () => finish(false);
+    const onKey = (ev) => { if (ev.key === "Escape") finish(true); };
     const finish = (cancel) => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onCancel);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onEndUp);
+      window.removeEventListener("touchcancel", onEndUp);
+      window.removeEventListener("pointermove", onPtrMove);
+      window.removeEventListener("pointerup", onEndUp);
       window.removeEventListener("keydown", onKey);
-      window.removeEventListener("touchmove", preventScroll);
       ghost.remove();
       document.body.classList.remove("dragging");
       document.querySelectorAll(".node.dragging-node").forEach(n => n.classList.remove("dragging-node"));
@@ -438,14 +445,15 @@
       dragging = false; suppressTap = true; setTimeout(() => { suppressTap = false; }, 60);
       const st = el("screen").scrollTop; render(); el("screen").scrollTop = st;
     };
-    const onUp = () => finish(false);
-    const onCancel = () => finish(false);   // a stray touch-cancel commits the move instead of wiping it
-    const onKey = (ev) => { if (ev.key === "Escape") finish(true); };
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onCancel);
+    if (isTouch) {
+      window.addEventListener("touchmove", onTouchMove, { passive: false });
+      window.addEventListener("touchend", onEndUp);
+      window.addEventListener("touchcancel", onEndUp);
+    } else {
+      window.addEventListener("pointermove", onPtrMove);
+      window.addEventListener("pointerup", onEndUp);
+    }
     window.addEventListener("keydown", onKey);
-    window.addEventListener("touchmove", preventScroll, { passive: false });
   };
 
   const depthOf = (id, arr, d = 0) => { for (const n of arr) { if (n.id === id) return d; if (n.children.length) { const r = depthOf(id, n.children, d + 1); if (r >= 0) return r; } } return -1; };
