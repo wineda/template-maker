@@ -134,7 +134,7 @@
   /* tree */
   .tree { list-style:none; margin:0; padding:0; }
   .node { position:relative; }
-  .row { display:flex; align-items:center; gap:8px; padding:5px 4px 5px 10px; border-radius:10px; min-height:46px; }
+  .row { display:flex; align-items:center; gap:8px; padding:5px 10px 5px 10px; border-radius:10px; min-height:46px; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
   .row:active { background:var(--surface-hover); }
   .row.selected { background:var(--accent-soft); }
   /* live drag: lifted card + tinted placeholder slot (TickTick-style) */
@@ -143,6 +143,9 @@
   .node.dragging-node > .children { display:none; }
   .row.drag-live { background:var(--accent-soft); border-radius:10px; box-shadow:inset 0 0 0 1.5px var(--accent); }
   .row.drag-live > * { visibility:hidden; }
+  .dragging { cursor:grabbing; }
+  .dragging .screen { overflow:hidden; touch-action:none; }
+  .dragging .row, .dragging .title, .dragging .check { touch-action:none; }
   @media (prefers-color-scheme: dark){ .dragcard { box-shadow:0 16px 36px -8px rgba(0,0,0,.7), 0 0 0 1px rgba(127,139,255,.18); } }
 
   .check { width:26px; height:26px; flex:none; border-radius:8px; border:2px solid var(--border-strong); background:var(--surface); display:grid; place-items:center; padding:0; transition:all .13s; }
@@ -160,7 +163,7 @@
 
   .title { flex:1; min-width:0; padding:6px 4px; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .row.is-done > .title { color:var(--text-faint); text-decoration:line-through; text-decoration-thickness:1.5px; }
-  .title[contenteditable="true"]{ outline:none; white-space:normal; overflow:visible; }
+  .title[contenteditable="true"]{ outline:none; white-space:normal; overflow:visible; user-select:text; -webkit-user-select:text; }
 
   .badge { font-size:11px; font-weight:700; color:var(--text-faint); background:var(--surface-2); border-radius:20px; padding:2px 8px; font-variant-numeric:tabular-nums; flex:none; }
   .badge.full { color:var(--done); background:var(--done-soft); }
@@ -168,12 +171,7 @@
   .pbar > i { display:block; height:100%; background:var(--accent); border-radius:3px; transition:width .35s; }
   .pbar.full > i { background:var(--done); }
 
-  .grip { width:34px; height:44px; flex:none; border:none; background:none; display:grid; place-items:center; color:var(--text-faint); opacity:.38; padding:0; touch-action:none; cursor:grab; }
-  .grip:active { opacity:.85; cursor:grabbing; }
-  .grip svg { width:18px; height:18px; }
-
   .children { list-style:none; margin:0; padding:0 0 0 26px; position:relative; }
-  .children::before { content:""; position:absolute; left:19px; top:0; bottom:8px; width:2px; background:var(--border-strong); border-radius:2px; }
 
   .listadd { display:flex; align-items:center; gap:7px; margin:2px 4px 6px; padding:9px 8px; color:var(--text-faint); font-size:13.5px; border:none; background:none; border-radius:8px; width:calc(100% - 8px); }
   .listadd:active { color:var(--accent); background:var(--surface-hover); }
@@ -327,92 +325,115 @@
   const PENCIL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20h4L18.5 9.5l-4-4L4 16v4zM13.5 6.5l4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   const FOLD = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
-  // ---------- drag & drop (live reorder preview) ----------
-  // While dragging, the affected cards physically move: on every change of drop
-  // target we mutate the model and re-render, so the tree previews the result.
-  let dragging = false;
+  // ---------- drag & drop (long-press + outliner-style indent) ----------
+  // Press-and-hold a row to pick it up. Move up/down to reorder, move left/right
+  // to change its depth (outdent / indent). The tree previews the result live.
+  const INDENT = 26;                 // px per depth level (matches .children padding-left)
+  const LONGPRESS_MS = 320;
+  let dragging = false, suppressTap = false;
 
-  const startDrag = (e, node, treeRoot) => {
-    e.preventDefault(); e.stopPropagation();
+  // arm a long-press on pointerdown; a quick tap falls through to the tap handlers
+  const armLongPress = (e, node, treeRoot) => {
     if (dragging) return;
-    const dragId = node.id;
-    const startX = e.clientX, startY = e.clientY;
-    const srcRow = e.currentTarget.closest(".row");
-    const rowRect = srcRow.getBoundingClientRect();
-    const grabDY = startY - rowRect.top;                     // keep the card under the finger
-    const cardInner = (() => { const c = srcRow.cloneNode(true); const g = c.querySelector(".grip"); if (g) g.remove(); return c.innerHTML; })();
-    let ghost = null, active = false, lastSig = null, lastPos = null, lastTargetId = null;
-    const snapshot = JSON.parse(JSON.stringify(treeRoot));   // for cancel/revert
+    if (e.target.closest(".check") || e.target.isContentEditable) return;   // let checkbox / editing work
+    if (e.button != null && e.button !== 0) return;
+    const srcRow = e.currentTarget;
+    const sx = e.clientX, sy = e.clientY;
+    let timer = setTimeout(() => { timer = null; cleanup(); beginDrag(node, treeRoot, srcRow, sx, sy); }, LONGPRESS_MS);
+    const onMove = (ev) => { if (Math.abs(ev.clientX - sx) > 8 || Math.abs(ev.clientY - sy) > 8) { clear(); } };
+    const onEnd = () => clear();
+    const clear = () => { if (timer) { clearTimeout(timer); timer = null; } cleanup(); };
+    const cleanup = () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onEnd); window.removeEventListener("pointercancel", onEnd); };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onEnd);
+    window.addEventListener("pointercancel", onEnd);
+  };
 
-    const makeGhost = () => {                                // lifted, full-width white card (TickTick-style)
-      ghost = document.createElement("div"); ghost.className = "dragcard";
-      ghost.innerHTML = cardInner;
-      ghost.style.left = rowRect.left + "px";
-      ghost.style.width = rowRect.width + "px";
-      document.body.appendChild(ghost);
-      document.body.classList.add("dragging");
-    };
-    const placeGhost = (x, y) => { ghost.style.top = (y - grabDY) + "px"; };
-    const decorate = () => {                                 // slot = tinted gap; snap the floating card to the slot's indent
+  const beginDrag = (node, treeRoot, srcRow, sx, sy) => {
+    if (dragging) return;
+    dragging = true;
+    const dragId = node.id;
+    const dragNode = node;
+    const startX = sx;
+    const startDepth = depthOf(dragId, treeRoot);
+    const rowRect = srcRow.getBoundingClientRect();
+    const grabDY = sy - rowRect.top;
+    const cardInner = srcRow.innerHTML;
+    const snapshot = JSON.parse(JSON.stringify(treeRoot));
+    let lastSig = null;
+
+    const ghost = document.createElement("div");
+    ghost.className = "dragcard"; ghost.innerHTML = cardInner;
+    ghost.style.left = rowRect.left + "px"; ghost.style.width = rowRect.width + "px"; ghost.style.top = (sy - grabDY) + "px";
+    document.body.appendChild(ghost);
+    document.body.classList.add("dragging");
+
+    const decorate = () => {
       document.querySelectorAll(".node.dragging-node").forEach(n => n.classList.remove("dragging-node"));
       document.querySelectorAll(".row.drag-live").forEach(r => r.classList.remove("drag-live"));
       const nodeEl = document.querySelector(`[data-nid="${dragId}"]`);
       if (!nodeEl) return;
       nodeEl.classList.add("dragging-node");
       const r = nodeEl.querySelector(":scope > .row");
-      if (r) {
-        r.classList.add("drag-live");
-        if (ghost) { const rr = r.getBoundingClientRect(); ghost.style.left = rr.left + "px"; ghost.style.width = rr.width + "px"; }
-      }
+      if (r) { r.classList.add("drag-live"); const rr = r.getBoundingClientRect(); ghost.style.left = rr.left + "px"; ghost.style.width = rr.width + "px"; }
     };
-    const preview = (targetId, pos) => {                     // mutate model + re-render, preserve scroll
-      const dInfo = findInfo(dragId, treeRoot, null); if (!dInfo) return;
-      const dragNode = dInfo.node;
-      if (isDesc(dragNode, targetId) || targetId === dragId) return;
-      removeById(dragId, treeRoot);
-      const t = findInfo(targetId, treeRoot, null);
-      if (!t) { treeRoot.splice(dInfo.i, 0, dragNode); return; }  // safety: put back
-      if (pos === "child") { t.node.children.push(dragNode); }
-      else t.arr.splice(t.i + (pos === "after" ? 1 : 0), 0, dragNode);
-      const st = el("screen").scrollTop; render(); el("screen").scrollTop = st;
-      decorate();
+    decorate();
+
+    // flatten the tree (excluding the dragged subtree) in visual order
+    const buildFlat = () => {
+      const out = [];
+      const walk = (arr, depth) => { for (const n of arr) { if (n.id === dragId) continue; out.push({ id: n.id, node: n, depth }); if (n.children.length) walk(n.children, depth + 1); } };
+      walk(treeRoot, 0);
+      return out;
+    };
+    // rebuild nested tree from a flat list of {node, depth}; keep the dragged node's own subtree
+    const rebuild = (flat) => {
+      const roots = [], stack = [];
+      for (const it of flat) {
+        if (it.node.id !== dragId) it.node.children = [];
+        while (stack.length && stack[stack.length - 1].depth >= it.depth) stack.pop();
+        if (!stack.length) roots.push(it.node); else stack[stack.length - 1].node.children.push(it.node);
+        stack.push({ node: it.node, depth: it.depth });
+      }
+      treeRoot.length = 0; roots.forEach(n => treeRoot.push(n));
     };
 
     const move = (ev) => {
       const x = ev.clientX, y = ev.clientY;
-      if (!active) {
-        if (Math.abs(x - startX) < 5 && Math.abs(y - startY) < 5) return;
-        active = true; dragging = true; makeGhost(); decorate();
+      ghost.style.top = (y - grabDY) + "px";
+      const flat = buildFlat();
+      // insertion index from pointer Y
+      let overIndex = flat.length;
+      for (let i = 0; i < flat.length; i++) {
+        const rEl = document.querySelector(`[data-nid="${flat[i].id}"] > .row`);
+        if (!rEl) continue;
+        const r = rEl.getBoundingClientRect();
+        if (y < r.top + r.height / 2) { overIndex = i; break; }
       }
-      placeGhost(x, y);
-      ghost.style.visibility = "hidden";
-      const hit = document.elementFromPoint(x, y);
-      ghost.style.visibility = "";
-      const row = hit && hit.closest(".row"); if (!row) return;
-      const tEl = row.closest(".node"); if (!tEl) return;
-      const tid = tEl.dataset.nid;
-      const dragNode = findInfo(dragId, treeRoot, null);
-      if (!tid || tid === dragId || (dragNode && isDesc(dragNode.node, tid))) return;
-      if (!findInfo(tid, treeRoot, null)) return;             // must be in this tree
-      const r = row.getBoundingClientRect();
-      const rel = (y - r.top) / r.height;
-      const pos = rel < 0.32 ? "before" : rel > 0.68 ? "after" : "child";
-      const sig = tid + ":" + pos;
-      if (sig === lastSig) return;                            // no change → stable, no jitter
-      lastSig = sig; lastPos = pos; lastTargetId = tid;
-      preview(tid, pos);
+      const prev = flat[overIndex - 1], next = flat[overIndex];
+      const maxDepth = prev ? prev.depth + 1 : 0;
+      const minDepth = next ? next.depth : 0;
+      let depth = startDepth + Math.round((x - startX) / INDENT);
+      depth = Math.max(minDepth, Math.min(maxDepth, depth));
+      const sig = overIndex + ":" + depth;
+      if (sig === lastSig) return;
+      lastSig = sig;
+      const flat2 = flat.slice(); flat2.splice(overIndex, 0, { id: dragId, node: dragNode, depth });
+      rebuild(flat2);
+      const st = el("screen").scrollTop; render(); el("screen").scrollTop = st;
+      decorate();
     };
     const finish = (cancel) => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onCancel);
       window.removeEventListener("keydown", onKey);
-      if (ghost) ghost.remove();
+      ghost.remove();
       document.body.classList.remove("dragging");
       document.querySelectorAll(".node.dragging-node").forEach(n => n.classList.remove("dragging-node"));
       document.querySelectorAll(".row.drag-live").forEach(r => r.classList.remove("drag-live"));
-      if (cancel && active) { treeRoot.length = 0; snapshot.forEach(n => treeRoot.push(n)); }
-      dragging = false;
+      if (cancel) { treeRoot.length = 0; snapshot.forEach(n => treeRoot.push(n)); }
+      dragging = false; suppressTap = true; setTimeout(() => { suppressTap = false; }, 60);
       const st = el("screen").scrollTop; render(); el("screen").scrollTop = st;
     };
     const onUp = () => finish(false);
@@ -423,6 +444,8 @@
     window.addEventListener("pointercancel", onCancel);
     window.addEventListener("keydown", onKey);
   };
+
+  const depthOf = (id, arr, d = 0) => { for (const n of arr) { if (n.id === id) return d; if (n.children.length) { const r = depthOf(id, n.children, d + 1); if (r >= 0) return r; } } return -1; };
 
   // ---------- action sheet ----------
   let sheetEl = null;
@@ -476,7 +499,7 @@
 
     const tt = document.createElement("div");
     tt.className = "title"; tt.textContent = n.title;
-    tt.onclick = () => openSheet(n, kind, treeRoot);
+    tt.onclick = () => { if (suppressTap || dragging) return; openSheet(n, kind, treeRoot); };
     tt.ondblclick = () => startEdit(tt, n);
     row.appendChild(tt);
 
@@ -496,11 +519,7 @@
       }
     }
 
-    const grip = document.createElement("button");
-    grip.className = "grip"; grip.title = "ドラッグして移動"; grip.innerHTML = GRIP;
-    grip.addEventListener("pointerdown", (e) => startDrag(e, n, treeRoot));
-    grip.onclick = (e) => e.stopPropagation();
-    row.appendChild(grip);
+    row.addEventListener("pointerdown", (e) => armLongPress(e, n, treeRoot));
 
     li.appendChild(row);
 
@@ -589,7 +608,7 @@
 
     const s = el("screen"); s.innerHTML = "";
     const meta = document.createElement("div"); meta.className = "edmeta";
-    meta.innerHTML = `<div class="desc">${esc(tpl.desc || "このテンプレートに説明はまだありません")}</div><div class="steps">全 ${countSteps(tpl.tree)} ステップ ・ 右下の＋でステップ追加、行タップで操作</div>`;
+    meta.innerHTML = `<div class="desc">${esc(tpl.desc || "このテンプレートに説明はまだありません")}</div><div class="steps">全 ${countSteps(tpl.tree)} ステップ ・ 行を長押しで移動（左右で階層変更）、タップで操作</div>`;
     s.appendChild(meta);
 
     const card = document.createElement("div"); card.className = "editcard";
