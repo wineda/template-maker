@@ -137,8 +137,11 @@
   .row { display:flex; align-items:center; gap:4px; padding:5px 4px 5px 2px; border-radius:10px; min-height:46px; }
   .row:active { background:var(--surface-hover); }
   .row.selected { background:var(--accent-soft); }
-  .row.drop-into { box-shadow:inset 0 0 0 2px var(--accent), 0 0 0 3px var(--accent-soft); background:var(--accent-soft); }
-  .node.drag-src > .row { opacity:.35; }
+  /* live drag preview */
+  .row.drag-live { background:var(--accent-soft); box-shadow:inset 0 0 0 1.5px var(--accent); }
+  .row.nest-parent { background:var(--accent-soft); }
+  .dragging .row { transition:background .12s; }
+  .dragging .children { transition:none; }
 
   .twist { width:30px; height:42px; flex:none; border:none; background:none; display:grid; place-items:center; color:var(--text-faint); padding:0; }
   .twist svg { transition:transform .15s; width:14px; height:14px; transform:rotate(90deg); }
@@ -328,107 +331,93 @@
   const PENCIL = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20h4L18.5 9.5l-4-4L4 16v4zM13.5 6.5l4 4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   const FOLD = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
-  // ---------- drag & drop ----------
-  const dropline = document.createElement("div"); dropline.className = "dropline"; document.body.appendChild(dropline);
-  let drag = null;
+  // ---------- drag & drop (live reorder preview) ----------
+  // While dragging, the affected cards physically move: on every change of drop
+  // target we mutate the model and re-render, so the tree previews the result.
+  let dragging = false;
 
   const startDrag = (e, node, treeRoot) => {
     e.preventDefault(); e.stopPropagation();
-    const rowEl = e.currentTarget.closest(".row");
-    const nodeEl = e.currentTarget.closest(".node");
+    if (dragging) return;
+    const dragId = node.id;
     const startX = e.clientX, startY = e.clientY;
-    let ghost = null, target = null, lastInto = null, active = false;
+    let ghost = null, active = false, lastSig = null, lastPos = null, lastTargetId = null;
+    const snapshot = JSON.parse(JSON.stringify(treeRoot));   // for cancel/revert
 
     const makeGhost = () => {
       ghost = document.createElement("div"); ghost.className = "dragghost";
       ghost.innerHTML = `<span class="gico">⠿</span><span class="gtxt">${esc(node.title)}</span>`;
       document.body.appendChild(ghost);
-      nodeEl.classList.add("drag-src");
       document.body.classList.add("dragging");
     };
-    const clearInto = () => { if (lastInto) { lastInto.classList.remove("drop-into"); lastInto = null; } };
-    const setGhost = (kind, tTitle) => {
-      if (!ghost) return;
-      const ico = ghost.querySelector(".gico"), txt = ghost.querySelector(".gtxt");
-      ghost.classList.remove("act-child", "act-before", "act-after");
-      if (kind === "child") { ghost.classList.add("act-child"); ico.textContent = "⤵"; txt.textContent = `「${tTitle}」の中に入れる`; }
-      else if (kind === "before") { ghost.classList.add("act-before"); ico.textContent = "↑"; txt.textContent = `「${tTitle}」の前へ移動`; }
-      else if (kind === "after") { ghost.classList.add("act-after"); ico.textContent = "↓"; txt.textContent = `「${tTitle}」の後へ移動`; }
-      else { ico.textContent = "⠿"; txt.textContent = node.title; }
+    const placeGhost = (x, y) => {
+      const gw = ghost.offsetWidth || 160;
+      let gl = x + 14;
+      if (gl + gw > innerWidth - 8) gl = x - 14 - gw;
+      gl = Math.min(Math.max(8, gl), Math.max(8, innerWidth - 8 - gw));
+      ghost.style.left = gl + "px"; ghost.style.top = (y - 20) + "px";
+    };
+    const decorate = () => {                                 // mark the moving card + nesting parent
+      document.querySelectorAll(".row.drag-live, .row.nest-parent").forEach(r => r.classList.remove("drag-live", "nest-parent"));
+      const dl = document.querySelector(`[data-nid="${dragId}"] > .row`); if (dl) dl.classList.add("drag-live");
+      if (lastPos === "child" && lastTargetId) { const pr = document.querySelector(`[data-nid="${lastTargetId}"] > .row`); if (pr) pr.classList.add("nest-parent"); }
+    };
+    const preview = (targetId, pos) => {                     // mutate model + re-render, preserve scroll
+      const dInfo = findInfo(dragId, treeRoot, null); if (!dInfo) return;
+      const dragNode = dInfo.node;
+      if (isDesc(dragNode, targetId) || targetId === dragId) return;
+      removeById(dragId, treeRoot);
+      const t = findInfo(targetId, treeRoot, null);
+      if (!t) { treeRoot.splice(dInfo.i, 0, dragNode); return; }  // safety: put back
+      if (pos === "child") { t.node.collapsed = false; t.node.children.push(dragNode); }
+      else t.arr.splice(t.i + (pos === "after" ? 1 : 0), 0, dragNode);
+      const st = el("screen").scrollTop; render(); el("screen").scrollTop = st;
+      decorate();
     };
 
     const move = (ev) => {
       const x = ev.clientX, y = ev.clientY;
-      if (!active) { if (Math.abs(x-startX) < 5 && Math.abs(y-startY) < 5) return; active = true; makeGhost(); }
-      const gw = ghost.offsetWidth || 200;
-      let gl = x + 14;                                   // prefer right of cursor
-      if (gl + gw > innerWidth - 8) gl = x - 14 - gw;    // flip to left near right edge
-      gl = Math.min(Math.max(8, gl), Math.max(8, innerWidth - 8 - gw)); // clamp on-screen
-      ghost.style.right = "auto"; ghost.style.left = gl + "px";
-      ghost.style.top = (y - 20) + "px";
-
+      if (!active) {
+        if (Math.abs(x - startX) < 5 && Math.abs(y - startY) < 5) return;
+        active = true; dragging = true; makeGhost(); decorate();
+      }
+      placeGhost(x, y);
       ghost.style.visibility = "hidden";
       const hit = document.elementFromPoint(x, y);
       ghost.style.visibility = "";
-      const row = hit && hit.closest(".row");
-      clearInto(); dropline.style.display = "none"; dropline.className = "dropline"; target = null; setGhost("none");
-      if (!row) return;
+      const row = hit && hit.closest(".row"); if (!row) return;
       const tEl = row.closest(".node"); if (!tEl) return;
       const tid = tEl.dataset.nid;
-      if (!tid || tid === node.id || isDesc(node, tid)) return; // no self / descendant
-      if (!treeRoot.some) return; // must be in the same tree
-      const info = findInfo(tid, treeRoot, null); if (!info) return;
+      const dragNode = findInfo(dragId, treeRoot, null);
+      if (!tid || tid === dragId || (dragNode && isDesc(dragNode.node, tid))) return;
+      if (!findInfo(tid, treeRoot, null)) return;             // must be in this tree
       const r = row.getBoundingClientRect();
-      const titleRect = row.querySelector(".title").getBoundingClientRect();
       const rel = (y - r.top) / r.height;
       const pos = rel < 0.32 ? "before" : rel > 0.68 ? "after" : "child";
-      target = { id: tid, pos };
-      if (pos === "child") {
-        row.classList.add("drop-into"); lastInto = row;
-        dropline.className = "dropline as-child";
-        dropline.style.display = "block";
-        dropline.style.left = (titleRect.left + 26) + "px";                 // deeper indent = inside
-        dropline.style.width = Math.max(30, r.right - titleRect.left - 32) + "px";
-        dropline.style.top = (r.bottom - 1.5) + "px";
-        setGhost("child", info.node.title);
-      } else {
-        dropline.className = "dropline";
-        dropline.style.display = "block";
-        dropline.style.left = titleRect.left + "px";                        // same level = sibling
-        dropline.style.width = Math.max(40, r.right - titleRect.left - 6) + "px";
-        dropline.style.top = (pos === "before" ? r.top : r.bottom) - 1.5 + "px";
-        setGhost(pos, info.node.title);
-      }
+      const sig = tid + ":" + pos;
+      if (sig === lastSig) return;                            // no change → stable, no jitter
+      lastSig = sig; lastPos = pos; lastTargetId = tid;
+      preview(tid, pos);
     };
-    const up = () => {
+    const finish = (cancel) => {
       window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-      window.removeEventListener("pointercancel", up);
-      clearInto(); dropline.style.display = "none"; dropline.className = "dropline";
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onCancel);
+      window.removeEventListener("keydown", onKey);
       if (ghost) ghost.remove();
-      nodeEl.classList.remove("drag-src");
       document.body.classList.remove("dragging");
-      if (active && target) applyDrop(node.id, target.id, target.pos, treeRoot);
+      document.querySelectorAll(".row.drag-live, .row.nest-parent").forEach(r => r.classList.remove("drag-live", "nest-parent"));
+      if (cancel && active) { treeRoot.length = 0; snapshot.forEach(n => treeRoot.push(n)); }
+      dragging = false;
+      const st = el("screen").scrollTop; render(); el("screen").scrollTop = st;
     };
+    const onUp = () => finish(false);
+    const onCancel = () => finish(true);
+    const onKey = (ev) => { if (ev.key === "Escape") finish(true); };
     window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
-    window.addEventListener("pointercancel", up);
-  };
-
-  const applyDrop = (dragId, targetId, pos, treeRoot) => {
-    if (dragId === targetId) return;
-    const dInfo = findInfo(dragId, treeRoot, null); if (!dInfo) return;
-    const dragNode = dInfo.node;
-    if (isDesc(dragNode, targetId)) return;
-    removeById(dragId, treeRoot);                 // detach
-    if (pos === "child") {
-      const t = findInfo(targetId, treeRoot, null); if (!t) return;
-      t.node.collapsed = false; t.node.children.push(dragNode);
-    } else {
-      const t = findInfo(targetId, treeRoot, null); if (!t) return;
-      t.arr.splice(t.i + (pos === "after" ? 1 : 0), 0, dragNode);
-    }
-    render();
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onCancel);
+    window.addEventListener("keydown", onKey);
   };
 
   // ---------- action sheet ----------
