@@ -802,9 +802,18 @@
   loadState();          // restore saved data if present (falls back to the seeded sample)
   render();
 
-  // PWA: register the service worker when hosted (no-op inside the sandboxed preview)
+  // PWA: register the service worker when hosted (no-op inside the sandboxed preview).
+  // When a new version takes control, reload once so the latest UI shows automatically.
   if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+    let reloaded = false;
+    const hadController = !!navigator.serviceWorker.controller;   // false on first-ever visit
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (reloaded || !hadController) return;                     // reload only when replacing an old version
+      reloaded = true; location.reload();
+    });
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").then((reg) => { try { reg.update(); } catch (_) {} }).catch(() => {});
+    });
   }
 })();
 </script>
