@@ -116,9 +116,6 @@
   .group-body { padding:6px 8px 4px; }
 
   .editcard { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:8px; margin-bottom:14px; }
-  .edmeta { padding:12px 8px 6px; }
-  .edmeta .desc { color:var(--text-dim); font-size:13px; }
-  .edmeta .steps { color:var(--text-faint); font-size:12.5px; margin-top:2px; }
 
   .bigbtn { display:flex; align-items:center; justify-content:center; gap:9px; width:100%; padding:14px; border-radius:12px; border:none; font-size:15px; font-weight:700; }
   .bigbtn.primary { background:var(--accent); color:#fff; box-shadow:var(--shadow); }
@@ -678,10 +675,6 @@
     el("subbar").style.display = "none";
 
     const s = el("screen"); s.innerHTML = "";
-    const meta = document.createElement("div"); meta.className = "edmeta";
-    meta.innerHTML = `<div class="desc">${esc(tpl.desc || "このテンプレートに説明はまだありません")}</div><div class="steps">全 ${countSteps(tpl.tree)} ステップ ・ 行を長押しで移動（左右で階層変更）、タップで操作</div>`;
-    s.appendChild(meta);
-
     const card = document.createElement("div"); card.className = "editcard";
     if (!tpl.tree.length) {
       card.innerHTML = `<div class="empty" style="padding:28px"><p>まだステップがありません</p><p class="s">右下の＋ボタンから追加しましょう。</p></div>`;
