@@ -49,6 +49,10 @@
   .iconbtn-lg:active { background:var(--surface-2); }
   .iconbtn-lg svg { width:22px; height:22px; }
   .iconbtn-lg.danger:active { color:var(--danger); background:#e0556b1a; }
+  .ab-actions { display:flex; align-items:center; gap:2px; flex:none; }
+  .abbtn { display:inline-flex; align-items:center; gap:5px; background:var(--accent); color:#fff; border:none; border-radius:10px; padding:8px 11px; font-size:12.5px; font-weight:700; white-space:nowrap; }
+  .abbtn:active { filter:brightness(.93); }
+  .abbtn svg { width:15px; height:15px; }
 
   .ring { display:flex; align-items:center; gap:9px; flex:none; }
   .ring .pct b { font-size:15px; font-variant-numeric:tabular-nums; }
@@ -78,6 +82,14 @@
 
   /* screen */
   .screen { flex:1; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; padding:14px 12px calc(20px + var(--safe-b)); }
+  .screen.has-fab { padding-bottom:calc(120px + var(--safe-b)); }
+
+  /* floating action button */
+  .fab { position:absolute; right:16px; bottom:calc(74px + var(--safe-b)); width:56px; height:56px; border-radius:19px; background:var(--accent); color:#fff; border:none; display:none; place-items:center; z-index:60; box-shadow:0 10px 22px -4px rgba(74,91,214,.55), 0 3px 8px rgba(0,0,0,.18); transition:transform .12s, filter .12s; }
+  .fab.show { display:grid; }
+  .fab:active { transform:scale(.93); filter:brightness(.96); }
+  .fab svg { width:27px; height:27px; }
+  @media (prefers-color-scheme: dark){ .fab { box-shadow:0 10px 24px -4px rgba(0,0,0,.6), 0 0 0 1px rgba(127,139,255,.25); } }
 
   /* template cards */
   .tplcard { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:12px; overflow:hidden; }
@@ -209,6 +221,9 @@
   <header class="appbar" id="appbar"></header>
   <div class="subbar" id="subbar"></div>
   <main class="screen" id="screen"></main>
+  <button class="fab" id="fab" title="追加" aria-label="追加">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
+  </button>
   <nav class="tabbar">
     <button data-mode="template" id="tabTpl">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M4 5v14h16V5M4 10h16M9 10v9" stroke-linejoin="round"/></svg>
@@ -547,39 +562,31 @@
   const renderTplEdit = () => {
     const tpl = templates.find(t => t.id === currentTplId);
     if (!tpl) { tplView = "list"; return renderTplList(); }
-    const del = document.createElement("button"); del.className = "iconbtn-lg danger"; del.innerHTML = DEL;
+    const del = document.createElement("button"); del.className = "iconbtn-lg danger"; del.innerHTML = DEL; del.title = "テンプレートを削除";
     del.onclick = () => { if (!confirm(`テンプレート「${tpl.name}」を削除しますか？`)) return; templates = templates.filter(t => t.id !== tpl.id); tplView = "list"; render(); };
-    setAppbar({ back: () => { tplView = "list"; render(); }, emoji: tpl.emoji, title: tpl.name, right: del });
+    const applyBtn = document.createElement("button"); applyBtn.className = "abbtn"; applyBtn.innerHTML = `${ADD}<span>本日に追加</span>`;
+    applyBtn.onclick = () => { today.push(instantiate(tpl)); mode = "today"; render(); };
+    const rightWrap = document.createElement("div"); rightWrap.className = "ab-actions"; rightWrap.append(applyBtn, del);
+    setAppbar({ back: () => { tplView = "list"; render(); }, emoji: tpl.emoji, title: tpl.name, right: rightWrap });
     el("abTitle").ondblclick = (e) => startEdit(e.target, tpl);
     el("abEmoji").onclick = () => { const v = prompt("絵文字を入力", tpl.emoji); if (v && v.trim()) { tpl.emoji = v.trim(); render(); } };
 
-    const sb = el("subbar"); sb.style.display = ""; sb.innerHTML = "";
-    const qa = document.createElement("div"); qa.className = "quickadd";
-    qa.innerHTML = `<div class="box">${ADDsvg()}<input id="qinput" placeholder="ステップを追加…" autocomplete="off"></div><button class="go" id="qgo">追加</button>`;
-    sb.appendChild(qa);
-    bindQuickAdd(() => { const v = el("qinput").value.trim(); if (!v) return false; tpl.tree.push(S(v)); return true; });
+    el("subbar").style.display = "none";
 
     const s = el("screen"); s.innerHTML = "";
     const meta = document.createElement("div"); meta.className = "edmeta";
-    meta.innerHTML = `<div class="desc">${esc(tpl.desc || "このテンプレートに説明はまだありません")}</div><div class="steps">全 ${countSteps(tpl.tree)} ステップ ・ 行をタップで操作、ハンドルをドラッグで移動</div>`;
+    meta.innerHTML = `<div class="desc">${esc(tpl.desc || "このテンプレートに説明はまだありません")}</div><div class="steps">全 ${countSteps(tpl.tree)} ステップ ・ 右下の＋でステップ追加、行タップで操作</div>`;
     s.appendChild(meta);
 
     const card = document.createElement("div"); card.className = "editcard";
     if (!tpl.tree.length) {
-      card.innerHTML = `<div class="empty" style="padding:28px"><p>まだステップがありません</p><p class="s">上の入力欄から追加しましょう。</p></div>`;
+      card.innerHTML = `<div class="empty" style="padding:28px"><p>まだステップがありません</p><p class="s">右下の＋ボタンから追加しましょう。</p></div>`;
     } else {
       const ul = document.createElement("ul"); ul.className = "tree";
       tpl.tree.forEach(n => ul.appendChild(renderNode(n, 1, "template", tpl.tree)));
       card.appendChild(ul);
     }
     s.appendChild(card);
-
-    const apply = document.createElement("button"); apply.className = "bigbtn primary"; apply.innerHTML = `${ADD} 本日のタスクに追加`;
-    apply.onclick = () => { today.push(instantiate(tpl)); mode = "today"; render(); };
-    s.appendChild(apply);
-    const delText = document.createElement("button"); delText.className = "textbtn"; delText.textContent = "このテンプレートを削除";
-    delText.onclick = del.onclick;
-    s.appendChild(delText);
   };
 
   // ---------- today ----------
@@ -595,15 +602,6 @@
     setAppbar({ eyebrow:"本日のタスク", title:dateLine(), right:ring });
 
     const sb = el("subbar"); sb.style.display = ""; sb.innerHTML = "";
-    const qa = document.createElement("div"); qa.className = "quickadd";
-    qa.innerHTML = `<div class="box">${ADDsvg()}<input id="qinput" placeholder="個別のタスクを追加…" autocomplete="off"></div><button class="go" id="qgo">追加</button>`;
-    sb.appendChild(qa);
-    bindQuickAdd(() => {
-      const v = el("qinput").value.trim(); if (!v) return false;
-      let g = today.find(x => x.templateId === null);
-      if (!g) { g = { id:nid(), templateId:null, emoji:"📝", name:"個別のタスク", items:[] }; today.push(g); }
-      g.items.push(I(v)); return true;
-    });
     const chips = document.createElement("div"); chips.className = "chiprow";
     chips.innerHTML = `<span class="lbl">ひな形から</span>`;
     templates.forEach(t => {
@@ -645,12 +643,32 @@
     });
   };
 
+  // ---------- floating add button ----------
+  const focusNew = (node) => requestAnimationFrame(() => {
+    const t = document.querySelector(`[data-nid="${node.id}"] > .row > .title`);
+    if (t) { t.scrollIntoView({ block: "center", behavior: "smooth" }); startEdit(t, node); }
+  });
+  const fabAdd = () => {
+    if (mode === "today") {
+      let g = today.find(x => x.templateId === null);
+      if (!g) { g = { id:nid(), templateId:null, emoji:"📝", name:"個別のタスク", items:[] }; today.push(g); }
+      const child = I("新しいタスク"); g.items.push(child); render(); focusNew(child);
+    } else if (mode === "template" && tplView === "edit") {
+      const tpl = templates.find(t => t.id === currentTplId); if (!tpl) return;
+      const step = S("新しいステップ"); tpl.tree.push(step); render(); focusNew(step);
+    }
+  };
+  el("fab").onclick = fabAdd;
+
   // ---------- render ----------
   const render = () => {
     el("tabTpl").classList.toggle("active", mode === "template");
     el("tabToday").classList.toggle("active", mode === "today");
     if (mode === "template") { if (tplView === "edit") renderTplEdit(); else renderTplList(); }
     else renderToday();
+    const showFab = mode === "today" || (mode === "template" && tplView === "edit");
+    el("fab").classList.toggle("show", showFab);
+    el("screen").classList.toggle("has-fab", showFab);
   };
 
   document.querySelectorAll(".tabbar button[data-mode]").forEach(b => {
