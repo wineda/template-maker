@@ -32,7 +32,8 @@
   input { font-family:inherit; }
   ::selection { background:var(--accent-soft); }
 
-  .app { display:flex; flex-direction:column; height:100dvh; max-width:520px; margin:0 auto; background:var(--bg); position:relative; box-shadow:0 0 0 1px var(--border); }
+  .app { display:flex; flex-direction:column; height:100dvh; height:var(--app-h, 100dvh); max-width:520px; margin:0 auto; background:var(--bg); position:relative; box-shadow:0 0 0 1px var(--border); }
+  .screen { min-height:0; }   /* let the scroll area shrink so the tab bar stays visible */
 
   /* appbar */
   .appbar { flex:none; display:flex; align-items:center; gap:6px; padding:12px 12px; min-height:56px; background:var(--surface); border-bottom:1px solid var(--border); }
@@ -243,6 +244,16 @@
 <script>
 (() => {
   "use strict";
+
+  // Pin the app to the real visible viewport height. Mobile browsers (esp. on reload,
+  // with the address bar toggling) can miscompute 100dvh and push the bottom tab bar
+  // off-screen; syncing to window.innerHeight keeps the tab bar visible.
+  const setAppH = () => document.documentElement.style.setProperty("--app-h", window.innerHeight + "px");
+  setAppH();
+  addEventListener("resize", setAppH);
+  addEventListener("orientationchange", () => { setAppH(); setTimeout(setAppH, 250); });
+  addEventListener("pageshow", setAppH);
+
   let uid = 1;
   const nid = () => "n" + (uid++);
   const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
