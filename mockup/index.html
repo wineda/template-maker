@@ -423,11 +423,13 @@
       const st = el("screen").scrollTop; render(); el("screen").scrollTop = st;
       decorate();
     };
+    const preventScroll = (ev) => { if (ev.cancelable) ev.preventDefault(); };  // stop touch scrolling → no pointercancel
     const finish = (cancel) => {
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onCancel);
       window.removeEventListener("keydown", onKey);
+      window.removeEventListener("touchmove", preventScroll);
       ghost.remove();
       document.body.classList.remove("dragging");
       document.querySelectorAll(".node.dragging-node").forEach(n => n.classList.remove("dragging-node"));
@@ -437,12 +439,13 @@
       const st = el("screen").scrollTop; render(); el("screen").scrollTop = st;
     };
     const onUp = () => finish(false);
-    const onCancel = () => finish(true);
+    const onCancel = () => finish(false);   // a stray touch-cancel commits the move instead of wiping it
     const onKey = (ev) => { if (ev.key === "Escape") finish(true); };
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", onUp);
     window.addEventListener("pointercancel", onCancel);
     window.addEventListener("keydown", onKey);
+    window.addEventListener("touchmove", preventScroll, { passive: false });
   };
 
   const depthOf = (id, arr, d = 0) => { for (const n of arr) { if (n.id === id) return d; if (n.children.length) { const r = depthOf(id, n.children, d + 1); if (r >= 0) return r; } } return -1; };
