@@ -210,6 +210,13 @@
   .sheet-item.danger { color:var(--danger); }
   .sheet-item.danger svg { color:var(--danger); }
   .sheet-cancel { width:100%; border:none; background:var(--surface-2); padding:14px; margin-top:6px; border-radius:12px; font-size:15px; font-weight:700; color:var(--text-dim); }
+  .setrow { padding:6px 14px 10px; }
+  .setrow label { display:block; font-size:11.5px; font-weight:700; letter-spacing:.03em; color:var(--text-dim); margin-bottom:7px; }
+  .setrow-2 { display:flex; gap:9px; }
+  .setinput { width:100%; box-sizing:border-box; border:1.5px solid var(--border-strong); border-radius:11px; padding:11px 12px; font-size:15px; font-family:inherit; background:var(--surface-2); color:var(--text); }
+  .setinput:focus { outline:none; border-color:var(--accent); background:var(--surface); }
+  .setinput.emojibox { width:60px; flex:none; text-align:center; font-size:22px; padding:8px; }
+  textarea.setinput { resize:none; line-height:1.45; }
 
   @media (prefers-reduced-motion: reduce){ * { transition:none !important; } }
 </style>
@@ -657,7 +664,7 @@
     nb.onclick = () => {
       const t = { id:nid(), emoji:"🗂️", name:"新しいテンプレート", desc:"", tree:[] };
       templates.push(t); currentTplId = t.id; tplView = "edit"; render();
-      requestAnimationFrame(() => { const e2 = el("abTitle"); if (e2) startEdit(e2, t, null, "name"); });
+      requestAnimationFrame(() => openTemplateSettings(t));
     };
     s.appendChild(nb);
   };
@@ -666,11 +673,11 @@
   const renderTplEdit = () => {
     const tpl = templates.find(t => t.id === currentTplId);
     if (!tpl) { tplView = "list"; return renderTplList(); }
-    const del = document.createElement("button"); del.className = "iconbtn-lg danger"; del.innerHTML = DEL; del.title = "テンプレートを削除";
-    del.onclick = () => { if (!confirm(`テンプレート「${tpl.name}」を削除しますか？`)) return; templates = templates.filter(t => t.id !== tpl.id); tplView = "list"; render(); };
-    setAppbar({ back: () => { tplView = "list"; render(); }, emoji: tpl.emoji, title: tpl.name, right: del });
-    el("abTitle").ondblclick = (e) => startEdit(e.target, tpl, null, "name");
-    el("abEmoji").onclick = () => { const v = prompt("絵文字を入力", tpl.emoji); if (v && v.trim()) { tpl.emoji = v.trim(); render(); } };
+    const gear = document.createElement("button"); gear.className = "iconbtn-lg"; gear.innerHTML = svgGear; gear.title = "テンプレートの設定";
+    gear.onclick = () => openTemplateSettings(tpl);
+    setAppbar({ back: () => { tplView = "list"; render(); }, emoji: tpl.emoji, title: tpl.name, right: gear });
+    el("abTitle").onclick = () => openTemplateSettings(tpl);
+    el("abEmoji").onclick = () => openTemplateSettings(tpl);
 
     el("subbar").style.display = "none";
 
@@ -782,6 +789,41 @@
     ov.querySelector(".act-import").onclick = () => { closeSheet(); importData(); };
   };
   const menuBtn = () => { const b = document.createElement("button"); b.className = "iconbtn-lg"; b.title = "データ"; b.innerHTML = svgMore; b.onclick = openDataSheet; return b; };
+
+  // ---------- template settings sheet ----------
+  const svgGear = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 13a1.7 1.7 0 0 0 .34 1.87l.05.05a2 2 0 1 1-2.83 2.83l-.05-.05a1.7 1.7 0 0 0-2.87 1.2V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8 19.3a1.7 1.7 0 0 0-1.87.34l-.05.05a2 2 0 1 1-2.83-2.83l.05-.05A1.7 1.7 0 0 0 4.7 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.7 9a1.7 1.7 0 0 0-.34-1.87l-.05-.05a2 2 0 1 1 2.83-2.83l.05.05A1.7 1.7 0 0 0 9 4.7a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 2.87 1.2 1.7 1.7 0 0 0 1.87-.34l.05-.05a2 2 0 1 1 2.83 2.83l-.05.05A1.7 1.7 0 0 0 19.3 9v.09a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const openTemplateSettings = (tpl) => {
+    closeSheet();
+    const ov = document.createElement("div"); ov.className = "sheet-overlay";
+    ov.innerHTML = `<div class="sheet">
+      <div class="sheet-grab"></div>
+      <div class="sheet-title"><span class="tt">テンプレートの設定</span></div>
+      <div class="setrow"><label>絵文字とテンプレート名</label>
+        <div class="setrow-2">
+          <input class="setinput emojibox" id="setEmoji" maxlength="4" inputmode="text" value="${esc(tpl.emoji || "")}">
+          <input class="setinput" id="setName" placeholder="テンプレート名" value="${esc(tpl.name || "")}">
+        </div>
+      </div>
+      <div class="setrow"><label>説明（任意）</label>
+        <textarea class="setinput" id="setDesc" rows="2" placeholder="このテンプレートの説明">${esc(tpl.desc || "")}</textarea>
+      </div>
+      <button class="sheet-item danger set-del">${DEL}<span>このテンプレートを削除</span></button>
+      <button class="sheet-cancel">閉じる</button>
+    </div>`;
+    document.body.appendChild(ov); sheetEl = ov;
+    requestAnimationFrame(() => ov.classList.add("show"));
+    const panel = ov.querySelector(".sheet");
+    const nameEl = ov.querySelector("#setName"), emojiEl = ov.querySelector("#setEmoji"), descEl = ov.querySelector("#setDesc");
+    const commit = () => { tpl.name = nameEl.value.trim() || "無題テンプレート"; tpl.emoji = emojiEl.value.trim() || "🗂️"; tpl.desc = descEl.value; render(); };
+    nameEl.oninput = commit; emojiEl.oninput = commit; descEl.oninput = commit;
+    ov.addEventListener("pointerdown", (e) => { if (!panel.contains(e.target)) closeSheet(); });
+    ov.querySelector(".sheet-cancel").onclick = closeSheet;
+    ov.querySelector(".set-del").onclick = () => {
+      if (!confirm(`テンプレート「${tpl.name}」を削除しますか？`)) return;
+      closeSheet(); templates = templates.filter(t => t.id !== tpl.id); tplView = "list"; render();
+    };
+    requestAnimationFrame(() => { nameEl.focus(); nameEl.select && nameEl.select(); });
+  };
 
   // ---------- render ----------
   const render = () => {
