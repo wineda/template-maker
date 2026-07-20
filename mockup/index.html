@@ -1,5 +1,13 @@
 <title>ひな形タスク — テンプレートでつくる毎日のタスク</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#4a5bd6" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#0d0f16" media="(prefers-color-scheme: dark)" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="ひな形タスク" />
+<link rel="apple-touch-icon" href="icon-192.png" />
 <style>
   :root {
     --bg:#f4f5fa; --surface:#ffffff; --surface-2:#eef0f7; --surface-hover:#f2f3fa;
@@ -282,6 +290,68 @@
   let today = [ instantiate(templates[0]) ];
   today[0].items[0].done = true; today[0].items[1].done = true;
   today.push({ id:nid(), templateId:null, emoji:"📝", name:"個別のタスク", items:[ I("メールの返信") ] });
+
+  // ---------- persistence (localStorage) + import / export ----------
+  const STORE_KEY = "hinagata-tasks-v1";
+  const DATA_VERSION = 1;
+  const serialize = () => ({ app: "hinagata-tasks", version: DATA_VERSION, exportedAt: new Date().toISOString(), templates, today });
+  const advanceUid = () => {
+    let max = 0;
+    const scan = (n) => { const m = /^n(\d+)$/.exec(n.id || ""); if (m) max = Math.max(max, +m[1]); (n.children || []).forEach(scan); };
+    templates.forEach(t => (t.tree || []).forEach(scan));
+    today.forEach(g => (g.items || []).forEach(scan));
+    uid = max + 1;
+  };
+  const save = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify({ version: DATA_VERSION, templates, today })); } catch (_) {} };
+  let saveTimer = null;
+  const scheduleSave = () => { clearTimeout(saveTimer); saveTimer = setTimeout(save, 400); };
+  const loadState = () => {
+    let raw; try { raw = localStorage.getItem(STORE_KEY); } catch (_) { return false; }
+    if (!raw) return false;
+    try {
+      const d = JSON.parse(raw);
+      if (!d || !Array.isArray(d.templates)) return false;
+      templates = d.templates;
+      today = Array.isArray(d.today) ? d.today : [];
+      advanceUid();
+      return true;
+    } catch (_) { return false; }
+  };
+  const applyImported = (d) => {
+    if (!d || !Array.isArray(d.templates)) throw new Error("テンプレートが見つかりません");
+    templates = d.templates;
+    today = Array.isArray(d.today) ? d.today : [];
+    advanceUid(); save();
+    currentTplId = null; mode = "template"; tplView = "list"; render();
+  };
+  const exportData = () => {
+    try {
+      const blob = new Blob([JSON.stringify(serialize(), null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const d = new Date(), p = (n) => String(n).padStart(2, "0");
+      a.href = url; a.download = `hinagata-tasks-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}.json`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } catch (e) { alert("エクスポートに失敗しました: " + e.message); }
+  };
+  const importData = () => {
+    const inp = document.createElement("input");
+    inp.type = "file"; inp.accept = "application/json,.json";
+    inp.onchange = () => {
+      const f = inp.files && inp.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = () => {
+        let d; try { d = JSON.parse(r.result); } catch (_) { alert("JSONの読み込みに失敗しました。ファイルを確認してください。"); return; }
+        if (!d || !Array.isArray(d.templates)) { alert("このファイルはひな形タスクのバックアップではないようです。"); return; }
+        if (!confirm("現在のデータを、読み込んだ内容で置き換えます。よろしいですか？")) return;
+        try { applyImported(d); alert("インポートが完了しました。"); }
+        catch (e) { alert("インポートに失敗しました: " + e.message); }
+      };
+      r.readAsText(f);
+    };
+    inp.click();
+  };
 
   // ---------- helpers ----------
   const leaves = (n) => n.children.length ? n.children.flatMap(leaves) : [n];
@@ -585,7 +655,7 @@
 
   // ---------- template list ----------
   const renderTplList = () => {
-    setAppbar({ eyebrow:"テンプレート", title:"ひな形の一覧" });
+    setAppbar({ eyebrow:"テンプレート", title:"ひな形の一覧", right: menuBtn() });
     el("subbar").style.display = "none";
     const s = el("screen"); s.innerHTML = "";
     templates.forEach(t => {
@@ -653,7 +723,9 @@
     ring.innerHTML = `<div class="pct"><b>${pct}%</b></div>
       <svg width="38" height="38" viewBox="0 0 38 38"><circle class="track" cx="19" cy="19" r="15" fill="none" stroke-width="5"/>
       <circle class="fill" cx="19" cy="19" r="15" fill="none" stroke-width="5" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-pct/100)}"/></svg>`;
-    setAppbar({ eyebrow:"本日のタスク", title:dateLine(), right:ring });
+    const rightWrap = document.createElement("div"); rightWrap.style.cssText = "display:flex;align-items:center;gap:2px";
+    rightWrap.append(ring, menuBtn());
+    setAppbar({ eyebrow:"本日のタスク", title:dateLine(), right:rightWrap });
 
     const sb = el("subbar"); sb.style.display = ""; sb.innerHTML = "";
     const chips = document.createElement("div"); chips.className = "chiprow";
@@ -714,6 +786,30 @@
   };
   el("fab").onclick = fabAdd;
 
+  // ---------- data menu ----------
+  const svgMore = `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg>`;
+  const svgExport = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v11M8 10l4 4 4-4M5 20h14" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const svgImport = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 15V4M8 8l4-4 4 4M5 20h14" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const openDataSheet = () => {
+    closeSheet();
+    const ov = document.createElement("div"); ov.className = "sheet-overlay";
+    ov.innerHTML = `<div class="sheet">
+      <div class="sheet-grab"></div>
+      <div class="sheet-title"><span class="tt">データ</span></div>
+      <button class="sheet-item act-export">${svgExport}<span>エクスポート（バックアップを保存）</span></button>
+      <button class="sheet-item act-import">${svgImport}<span>インポート（バックアップから復元）</span></button>
+      <button class="sheet-cancel">閉じる</button>
+    </div>`;
+    document.body.appendChild(ov); sheetEl = ov;
+    requestAnimationFrame(() => ov.classList.add("show"));
+    const panel = ov.querySelector(".sheet");
+    ov.addEventListener("pointerdown", (e) => { if (!panel.contains(e.target)) closeSheet(); });
+    ov.querySelector(".sheet-cancel").onclick = closeSheet;
+    ov.querySelector(".act-export").onclick = () => { closeSheet(); exportData(); };
+    ov.querySelector(".act-import").onclick = () => { closeSheet(); importData(); };
+  };
+  const menuBtn = () => { const b = document.createElement("button"); b.className = "iconbtn-lg"; b.title = "データ"; b.innerHTML = svgMore; b.onclick = openDataSheet; return b; };
+
   // ---------- render ----------
   const render = () => {
     el("tabTpl").classList.toggle("active", mode === "template");
@@ -723,6 +819,7 @@
     const showFab = mode === "today" || (mode === "template" && tplView === "edit");
     el("fab").classList.toggle("show", showFab);
     el("screen").classList.toggle("has-fab", showFab);
+    scheduleSave();
   };
 
   document.querySelectorAll(".tabbar button[data-mode]").forEach(b => {
@@ -743,6 +840,12 @@
   };
   setLabel();
 
+  loadState();          // restore saved data if present (falls back to the seeded sample)
   render();
+
+  // PWA: register the service worker when hosted (no-op inside the sandboxed preview)
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+  }
 })();
 </script>
