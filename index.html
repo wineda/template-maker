@@ -1,8 +1,7 @@
 <title>ひな形タスク — テンプレートでつくる毎日のタスク</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <link rel="manifest" href="manifest.webmanifest" />
-<meta name="theme-color" content="#4a5bd6" media="(prefers-color-scheme: light)" />
-<meta name="theme-color" content="#0d0f16" media="(prefers-color-scheme: dark)" />
+<meta name="theme-color" content="#4a5bd6" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -17,19 +16,9 @@
     --d1:#4a5bd6; --d2:#1f9d8a; --d3:#d98324; --d4:#c0568a; --d5:#7a56c0;
     --radius:14px; --radius-sm:10px;
     --safe-b: env(safe-area-inset-bottom, 0px);
+    color-scheme: light;   /* light only */
     font-synthesis:none;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg:#0d0f16; --surface:#161a24; --surface-2:#1e2331; --surface-hover:#222738;
-      --border:#282e3e; --border-strong:#353c50; --text:#e9ebf5; --text-dim:#9aa1ba;
-      --text-faint:#6b7288; --accent:#7f8bff; --accent-soft:#232a4c; --done:#46c37b; --done-soft:#163524; --danger:#f06a7e;
-      --shadow:0 1px 2px rgba(0,0,0,.35), 0 14px 30px -16px rgba(0,0,0,.6);
-      --d1:#7f8bff; --d2:#34c3ac; --d3:#e5a04e; --d4:#db7aad; --d5:#a284e0;
-    }
-  }
-  :root[data-theme="light"]{ --bg:#f4f5fa;--surface:#fff;--surface-2:#eef0f7;--surface-hover:#f2f3fa;--border:#e5e7f0;--border-strong:#d3d7e6;--text:#191c2b;--text-dim:#5f6580;--text-faint:#969cb4;--accent:#4a5bd6;--accent-soft:#eceeff;--done:#1f9d55;--done-soft:#e4f5ea;--danger:#e0556b;--shadow:0 1px 2px rgba(20,24,48,.05),0 10px 24px -14px rgba(20,24,48,.14);--d1:#4a5bd6;--d2:#1f9d8a;--d3:#d98324;--d4:#c0568a;--d5:#7a56c0;}
-  :root[data-theme="dark"]{ --bg:#0d0f16;--surface:#161a24;--surface-2:#1e2331;--surface-hover:#222738;--border:#282e3e;--border-strong:#353c50;--text:#e9ebf5;--text-dim:#9aa1ba;--text-faint:#6b7288;--accent:#7f8bff;--accent-soft:#232a4c;--done:#46c37b;--done-soft:#163524;--danger:#f06a7e;--shadow:0 1px 2px rgba(0,0,0,.35),0 14px 30px -16px rgba(0,0,0,.6);--d1:#7f8bff;--d2:#34c3ac;--d3:#e5a04e;--d4:#db7aad;--d5:#a284e0;}
 
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html, body { height:100%; }
@@ -97,7 +86,6 @@
   .fab.show { display:grid; }
   .fab:active { transform:scale(.93); filter:brightness(.96); }
   .fab svg { width:27px; height:27px; }
-  @media (prefers-color-scheme: dark){ .fab { box-shadow:0 10px 24px -4px rgba(0,0,0,.6), 0 0 0 1px rgba(127,139,255,.25); } }
 
   /* template cards */
   .tplcard { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:12px; overflow:hidden; }
@@ -154,7 +142,6 @@
   .dragging { cursor:grabbing; }
   .dragging .screen { overflow:hidden; touch-action:none; }
   .dragging .row, .dragging .title, .dragging .check { touch-action:none; }
-  @media (prefers-color-scheme: dark){ .dragcard { box-shadow:0 16px 36px -8px rgba(0,0,0,.7), 0 0 0 1px rgba(127,139,255,.18); } }
 
   .check { width:26px; height:26px; flex:none; border-radius:8px; border:2px solid var(--border-strong); background:var(--surface); display:grid; place-items:center; padding:0; transition:all .13s; }
   .check:active { transform:scale(.92); }
@@ -210,7 +197,6 @@
   .tabbar button { flex:1; border:none; background:none; padding:9px 4px 8px; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--text-faint); font-size:11px; font-weight:600; }
   .tabbar button svg { width:24px; height:24px; }
   .tabbar button.active { color:var(--accent); }
-  .tabbar .themebtn { flex:0 0 66px; color:var(--text-faint); }
 
   /* action sheet */
   .sheet-overlay { position:fixed; inset:0; z-index:90; background:rgba(15,17,25,.42); display:flex; align-items:flex-end; justify-content:center; opacity:0; transition:opacity .2s; }
@@ -246,10 +232,6 @@
     <button data-mode="today" id="tabToday">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L20 6M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9" stroke-linecap="round" stroke-linejoin="round"/></svg>
       本日のタスク
-    </button>
-    <button class="themebtn" id="themeBtn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3a6.6 6.6 0 0 0 9.8 9.8z" stroke-linejoin="round"/></svg>
-      <span id="themeLabel">ダーク</span>
     </button>
   </nav>
 </div>
@@ -823,20 +805,6 @@
   document.querySelectorAll(".tabbar button[data-mode]").forEach(b => {
     b.onclick = () => { mode = b.dataset.mode; if (mode === "template") tplView = "list"; render(); };
   });
-
-  // theme
-  const themeLabel = el("themeLabel");
-  const setLabel = () => {
-    const isDark = document.documentElement.getAttribute("data-theme") === "dark"
-      || (!document.documentElement.getAttribute("data-theme") && matchMedia("(prefers-color-scheme: dark)").matches);
-    themeLabel.textContent = isDark ? "ライト" : "ダーク";
-  };
-  el("themeBtn").onclick = () => {
-    const cur = document.documentElement.getAttribute("data-theme");
-    const isDark = cur === "dark" || (!cur && matchMedia("(prefers-color-scheme: dark)").matches);
-    document.documentElement.setAttribute("data-theme", isDark ? "light" : "dark"); setLabel();
-  };
-  setLabel();
 
   loadState();          // restore saved data if present (falls back to the seeded sample)
   render();
