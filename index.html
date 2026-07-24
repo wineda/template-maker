@@ -88,24 +88,21 @@
   .fab:active { transform:scale(.93); filter:brightness(.96); }
   .fab svg { width:27px; height:27px; }
 
-  /* template cards */
-  .tplcard { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); margin-bottom:10px; overflow:hidden; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
-  .tplcard.cardghost { position:fixed; z-index:80; pointer-events:none; margin:0; box-shadow:0 16px 34px -8px rgba(20,24,48,.42), 0 3px 10px rgba(0,0,0,.12); }
-  .tplcard.card-live { background:var(--accent-soft); border-color:var(--accent); box-shadow:inset 0 0 0 1.5px var(--accent); }
-  .tplcard.card-live > * { visibility:hidden; }
-  .tplcard .body { display:flex; align-items:center; gap:11px; padding:11px 13px; width:100%; border:none; background:none; text-align:left; }
-  .tplcard .body:active { background:var(--surface-hover); }
-  .tplcard .em { font-size:22px; flex:none; width:38px; height:38px; display:grid; place-items:center; background:var(--surface-2); border-radius:10px; }
-  .tplcard .tx { flex:1; min-width:0; }
-  .tplcard .tx b { display:block; font-size:15px; font-weight:700; }
-  .tplcard .tx span { display:block; font-size:12.5px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px; }
-  .tplcard .chev { color:var(--text-faint); flex:none; }
-  .tplcard .chev svg { width:20px; height:20px; }
-  .tplcard .foot { display:flex; align-items:center; border-top:1px solid var(--border); }
-  .tplcard .foot .cnt { flex:1; padding:9px 13px; font-size:12px; color:var(--text-faint); font-weight:600; font-variant-numeric:tabular-nums; }
-  .tplcard .foot button { border:none; background:none; padding:9px 15px; font-size:13px; font-weight:600; color:var(--accent); display:flex; align-items:center; gap:7px; }
-  .tplcard .foot button:active { background:var(--accent-soft); }
-  .tplcard .foot button svg { width:16px; height:16px; }
+  /* template list (compact rows) */
+  .tpllist { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; margin-bottom:12px; }
+  .tplrow { display:flex; align-items:center; gap:9px; padding:6px 6px 6px 14px; min-height:48px; background:var(--surface); user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+  .tplrow + .tplrow { border-top:1px solid var(--border); }
+  .tplrow:active { background:var(--surface-hover); }
+  .tplrow .em { font-size:19px; flex:none; width:26px; text-align:center; }
+  .tplrow .nm { flex:1; min-width:0; font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .tplrow .meta { flex:none; font-size:11.5px; color:var(--text-faint); font-weight:600; font-variant-numeric:tabular-nums; }
+  .tplrow .reppill { flex:none; font-size:10.5px; font-weight:700; color:var(--accent); background:var(--accent-soft); border-radius:12px; padding:2px 8px; max-width:92px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .tplrow .addbtn { flex:none; width:38px; height:38px; border:none; background:none; border-radius:10px; display:grid; place-items:center; color:var(--accent); }
+  .tplrow .addbtn:active { background:var(--accent-soft); }
+  .tplrow .addbtn svg { width:19px; height:19px; }
+  .tplrow.cardghost { position:fixed; z-index:80; pointer-events:none; margin:0; border:1px solid var(--border); border-radius:12px; box-shadow:0 16px 34px -8px rgba(20,24,48,.42), 0 3px 10px rgba(0,0,0,.12); }
+  .tplrow.card-live { background:var(--accent-soft); box-shadow:inset 0 0 0 1.5px var(--accent); }
+  .tplrow.card-live > * { visibility:hidden; }
 
   .newcard { display:flex; align-items:center; justify-content:center; gap:9px; width:100%; padding:16px; border:1.5px dashed var(--border-strong); border-radius:var(--radius); background:none; color:var(--text-dim); font-size:14.5px; font-weight:600; }
   .newcard:active { border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
@@ -592,15 +589,15 @@
     let lastSig = null;
 
     const ghost = document.createElement("div");
-    ghost.className = "tplcard cardghost";
+    ghost.className = "tplrow cardghost";
     ghost.innerHTML = cardEl.innerHTML;
     ghost.style.left = rect.left + "px"; ghost.style.width = rect.width + "px"; ghost.style.top = (sy - grabDY) + "px";
     document.body.appendChild(ghost);
     document.body.classList.add("dragging");
 
     const decorate = () => {
-      document.querySelectorAll(".tplcard.card-live").forEach(c => c.classList.remove("card-live"));
-      const c = document.querySelector(`.tplcard[data-tid="${tpl.id}"]`);
+      document.querySelectorAll(".tplrow.card-live").forEach(c => c.classList.remove("card-live"));
+      const c = document.querySelector(`.tplrow[data-tid="${tpl.id}"]`);
       if (c) c.classList.add("card-live");
     };
     decorate();
@@ -611,7 +608,7 @@
       const others = templates.filter(t => t.id !== tpl.id);
       let idx = others.length;
       for (let i = 0; i < others.length; i++) {
-        const c = document.querySelector(`.tplcard[data-tid="${others[i].id}"]`);
+        const c = document.querySelector(`.tplrow[data-tid="${others[i].id}"]`);
         if (!c) continue;
         const r = c.getBoundingClientRect();
         if (y < r.top + r.height / 2) { idx = i; break; }
@@ -639,7 +636,7 @@
       window.removeEventListener("keydown", onKey);
       ghost.remove();
       document.body.classList.remove("dragging");
-      document.querySelectorAll(".tplcard.card-live").forEach(c => c.classList.remove("card-live"));
+      document.querySelectorAll(".tplrow.card-live").forEach(c => c.classList.remove("card-live"));
       if (cancel) templates = snapshot;
       dragging = false; suppressTap = true; setTimeout(() => { suppressTap = false; }, 60);
       const st = el("screen").scrollTop; render(); el("screen").scrollTop = st;
@@ -774,23 +771,30 @@
     setAppbar({ eyebrow:"テンプレート", title:"ひな形の一覧", right: menuBtn() });
     el("subbar").style.display = "none";
     const s = el("screen"); s.innerHTML = "";
+    const repeatLabel = (r) => {
+      if (!r || !r.length) return "";
+      const s2 = [...r].sort((a, b) => a - b).join(",");
+      if (r.length === 7) return "毎日";
+      if (s2 === "1,2,3,4,5") return "平日";
+      if (s2 === "0,6") return "土日";
+      return [1,2,3,4,5,6,0].filter(d => r.includes(d)).map(d => ["日","月","火","水","木","金","土"][d]).join("");
+    };
+    const list = document.createElement("div"); list.className = "tpllist";
     templates.forEach(t => {
-      const card = document.createElement("div"); card.className = "tplcard"; card.dataset.tid = t.id;
-      const body = document.createElement("button"); body.className = "body";
-      body.innerHTML = `<span class="em">${t.emoji}</span>
-        <span class="tx"><b>${esc(t.name)}</b><span>${esc(t.desc || "説明なし")}</span></span>
-        <span class="chev">${CHEV}</span>`;
-      body.onclick = () => { if (suppressTap || dragging) return; currentTplId = t.id; tplView = "edit"; render(); };
-      const foot = document.createElement("div"); foot.className = "foot";
-      const days = (t.repeat || []).length ? " ・ 🔁 " + [1,2,3,4,5,6,0].filter(d => t.repeat.includes(d)).map(d => ["日","月","火","水","木","金","土"][d]).join("") : "";
-      foot.innerHTML = `<span class="cnt">${countSteps(t.tree)} ステップ${days}</span>`;
-      const applyBtn = document.createElement("button"); applyBtn.innerHTML = `${ADD} 本日に追加`;
-      applyBtn.onclick = () => { if (suppressTap || dragging) return; today.push(instantiate(t)); mode = "today"; render(); };
-      foot.appendChild(applyBtn);
-      card.append(body, foot);
-      card.addEventListener("pointerdown", (e) => armCardLongPress(e, t));
-      s.appendChild(card);
+      const row = document.createElement("div"); row.className = "tplrow"; row.dataset.tid = t.id;
+      const rep = repeatLabel(t.repeat);
+      row.innerHTML = `<span class="em">${t.emoji}</span>
+        <span class="nm">${esc(t.name)}</span>
+        <span class="meta">${countSteps(t.tree)}</span>
+        ${rep ? `<span class="reppill">${esc(rep)}</span>` : ""}`;
+      const add = document.createElement("button"); add.className = "addbtn"; add.title = "本日に追加"; add.innerHTML = ADD;
+      add.onclick = (e) => { e.stopPropagation(); if (suppressTap || dragging) return; today.push(instantiate(t)); mode = "today"; render(); };
+      row.appendChild(add);
+      row.onclick = () => { if (suppressTap || dragging) return; currentTplId = t.id; tplView = "edit"; render(); };
+      row.addEventListener("pointerdown", (e) => armCardLongPress(e, t));
+      list.appendChild(row);
     });
+    if (templates.length) s.appendChild(list);
     const nb = document.createElement("button"); nb.className = "newcard"; nb.innerHTML = `${ADD} 新しいテンプレート`;
     nb.onclick = () => {
       const t = { id:nid(), emoji:"🗂️", name:"新しいテンプレート", desc:"", tree:[] };
