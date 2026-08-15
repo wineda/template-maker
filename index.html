@@ -222,6 +222,43 @@
   .dow { flex:1; padding:9px 0; border-radius:9px; border:1.5px solid var(--border-strong); background:var(--surface-2); font-size:13px; font-weight:700; color:var(--text-dim); }
   .dow.on { background:var(--accent); border-color:var(--accent); color:#fff; }
 
+  .tabbar .brand { display:none; }
+
+  /* ---- desktop / tablet-landscape layout (≥860px, e.g. 10" Chromebook) ---- */
+  @media (min-width: 860px) {
+    .app { max-width:1140px; display:grid; grid-template-columns:232px minmax(0,1fr); grid-template-rows:auto auto minmax(0,1fr); }
+    /* bottom tab bar becomes a left nav rail */
+    .tabbar { grid-column:1; grid-row:1/4; flex-direction:column; justify-content:flex-start; gap:4px; border-top:none; border-right:1px solid var(--border); padding:14px 12px; }
+    .tabbar .brand { display:flex; align-items:center; gap:9px; font-size:15.5px; font-weight:800; padding:8px 12px 18px; }
+    .tabbar .brand .logo { font-size:20px; }
+    .tabbar button { flex:0 0 auto; flex-direction:row; justify-content:flex-start; gap:11px; font-size:14px; font-weight:600; padding:11px 14px; border-radius:10px; }
+    .tabbar button svg { width:20px; height:20px; }
+    .tabbar button.active { background:var(--accent-soft); }
+    .appbar { grid-column:2; grid-row:1; padding:14px 26px; }
+    .subbar { grid-column:2; grid-row:2; }
+    .subbar .chiprow { padding:10px 26px; }
+    .screen { grid-column:2; grid-row:3; padding:20px 26px calc(24px + var(--safe-b)); }
+    .screen.has-fab { padding-bottom:110px; }
+    .tpllist, .newcard, .editcard, .group, .empty { max-width:720px; }
+    .fab { right:28px; bottom:28px; }
+    /* bottom sheets become centered dialogs */
+    .sheet-overlay { align-items:center; }
+    .sheet { width:480px; border-radius:20px; padding-bottom:14px; transform:translateY(14px); opacity:0; transition:transform .2s ease, opacity .2s ease; }
+    .sheet-overlay.show .sheet { transform:translateY(0); opacity:1; }
+    .sheet-grab { display:none; }
+  }
+
+  /* pointer-device niceties (Chromebook trackpad / mouse) */
+  @media (hover:hover) and (pointer:fine) {
+    .tplrow:hover, .row:hover, .sheet-item:hover { background:var(--surface-hover); }
+    .tabbar button:hover { color:var(--accent); }
+    .iconbtn-lg:hover { background:var(--surface-2); }
+    .addbtn:hover, .listadd:hover { background:var(--accent-soft); color:var(--accent); }
+    .chip:hover, .newcard:hover, .dow:hover { border-color:var(--accent); }
+    .newcard:hover { color:var(--accent); }
+    .fab:hover { filter:brightness(1.07); }
+  }
+
   @media (prefers-reduced-motion: reduce){ * { transition:none !important; } }
 </style>
 
@@ -233,6 +270,7 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
   </button>
   <nav class="tabbar">
+    <div class="brand"><span class="logo">🌳</span>ひな形タスク</div>
     <button data-mode="template" id="tabTpl">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16M4 5v14h16V5M4 10h16M9 10v9" stroke-linejoin="round"/></svg>
       テンプレート
